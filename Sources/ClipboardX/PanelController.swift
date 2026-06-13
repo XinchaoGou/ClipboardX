@@ -5,6 +5,15 @@ import SwiftUI
 final class FloatingPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
+
+    /// Return true to consume the event. Called before the focused field's keyDown,
+    /// so it can intercept keys (e.g. Shift+Return) the search field would swallow.
+    var onKeyEquivalent: ((NSEvent) -> Bool)?
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if onKeyEquivalent?(event) == true { return true }
+        return super.performKeyEquivalent(with: event)
+    }
 }
 
 /// Owns the clipboard panel window and toggles its visibility.
@@ -78,6 +87,17 @@ final class PanelController {
         panel.hidesOnDeactivate = false
         panel.contentView = hosting
         panel.delegate = PanelDelegate.shared
+        // Shift+Return → paste the selection as plain text. Handled here because the
+        // focused search field would otherwise consume it.
+        panel.onKeyEquivalent = { [weak self] event in
+            guard let self else { return false }
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            if event.keyCode == 36, flags == .shift {   // 36 = Return
+                self.app.pasteSelected(plainText: true)
+                return true
+            }
+            return false
+        }
         return panel
     }
 }

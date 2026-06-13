@@ -295,6 +295,36 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - None.
 
+## 2026-06-13 (fix: Shift+Return plain paste not firing)
+
+### Done
+
+- The SwiftUI `keyboardShortcut(.return, modifiers: .shift)` button never fired:
+  unlike Cmd-modified keys, Shift+Return is consumed by the focused search field's
+  field editor (insertLineBreak) before reaching the key-equivalent path.
+- Moved the panel selection (`selectedID`) into `AppState` and added
+  `pasteSelected(plainText:)`. `FloatingPanel` now overrides `performKeyEquivalent`
+  (called before the field's keyDown); `PanelController` intercepts Shift+Return
+  (keyCode 36, shift-only) and pastes the selection as plain text. Removed the
+  non-working SwiftUI shortcut button (Cmd+Delete button kept).
+
+### Files Changed
+
+- `Sources/ClipboardX/AppState.swift`, `ClipboardPanelView.swift`,
+  `PanelController.swift`
+
+### Current Status
+
+- Builds, packages, relaunched. Return = formatted, Shift+Return = plain.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- None.
+
 ## 2026-06-13 (feature: formatted paste — Return vs Shift+Return)
 
 ### Done

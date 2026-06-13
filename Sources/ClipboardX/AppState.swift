@@ -25,11 +25,21 @@ final class AppState: ObservableObject {
         didSet { reload(); requestSelectionReset() }
     }
 
+    /// The currently highlighted item id in the panel. Lives here (not in the
+    /// SwiftUI view) so the panel window can act on it from performKeyEquivalent.
+    @Published var selectedID: Int64?
+
     /// Bumped whenever the panel should reset its selection to the first item
     /// (e.g. on entering a section, searching, or reopening the panel).
     @Published var selectionResetToken = 0
 
     func requestSelectionReset() { selectionResetToken &+= 1 }
+
+    /// Paste the currently selected item (used by window-level key handling).
+    func pasteSelected(plainText: Bool) {
+        guard let id = selectedID, let item = items.first(where: { $0.id == id }) else { return }
+        pasteItem(item, plainText: plainText)
+    }
 
     init(store: ClipboardStore, settings: SettingsStore, paste: PasteExecutor) {
         self.store = store

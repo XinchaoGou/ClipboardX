@@ -4,15 +4,14 @@ import AppKit
 /// The Spotlight-like floating panel: search field on top, history list below.
 struct ClipboardPanelView: View {
     @ObservedObject var app: AppState
-    // Selection and hover are tracked by stable item id (not list position) so
-    // they stay attached to the right row when the list reorders or reloads.
-    @State private var selectedID: Int64?
+    // Selection (in AppState) and hover are tracked by stable item id (not list
+    // position) so they stay attached to the right row when the list reorders.
     @State private var hoveredID: Int64?
     @State private var editingItem: ClipboardItem?
     @FocusState private var searchFocused: Bool
 
     private var selectedIndex: Int {
-        guard let id = selectedID else { return 0 }
+        guard let id = app.selectedID else { return 0 }
         return app.items.firstIndex { $0.id == id } ?? 0
     }
 
@@ -30,32 +29,28 @@ struct ClipboardPanelView: View {
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.08)))
-        // Hidden shortcut buttons. These route via the window's key-equivalent path
-        // so they fire even while the search field is focused (which would otherwise
-        // consume Cmd+Delete and Shift+Return).
+        // Cmd+Delete deletes the selection even while the search field is focused.
+        // (Shift+Return for plain paste is handled at the window level in
+        // FloatingPanel.performKeyEquivalent, since the field swallows it here.)
         .background(
-            SwiftUI.Group {
-                Button("", action: deleteSelected)
-                    .keyboardShortcut(.delete, modifiers: .command)
-                Button("") { pasteSelected(plainText: true) }
-                    .keyboardShortcut(.return, modifiers: .shift)
-            }
-            .opacity(0)
-            .accessibilityHidden(true)
+            Button("", action: deleteSelected)
+                .keyboardShortcut(.delete, modifiers: .command)
+                .opacity(0)
+                .accessibilityHidden(true)
         )
         .onAppear {
             searchFocused = true
-            selectedID = app.items.first?.id
+            app.selectedID = app.items.first?.id
         }
         .onChange(of: app.items) { _, items in
             // Keep selection valid when the list reloads/reorders.
-            if selectedID == nil || !items.contains(where: { $0.id == selectedID }) {
-                selectedID = items.first?.id
+            if app.selectedID == nil || !items.contains(where: { $0.id == app.selectedID }) {
+                app.selectedID = items.first?.id
             }
         }
         .onChange(of: app.selectionResetToken) { _, _ in
             // Always reselect the top item when entering a section / reopening.
-            selectedID = app.items.first?.id
+            app.selectedID = app.items.first?.id
         }
         .onKeyPress(phases: .down) { press in handleKey(press) }
         .sheet(item: $editingItem) { item in
@@ -178,10 +173,10 @@ struct ClipboardPanelView: View {
                         ClipboardRowView(
                             item: item,
                             index: index,
-                            selected: item.id == selectedID,
+                            selected: item.id == app.selectedID,
                             hovered: item.id == hoveredID,
                             app: app,
-                            onActivate: { selectedID = item.id; pasteSelected() },
+                            onActivate: { app.selectedID = item.id; pasteSelected() },
                             onHoverChange: { isHovering in
                                 if isHovering { hoveredID = item.id }
                                 else if hoveredID == item.id { hoveredID = nil }
@@ -193,7 +188,7 @@ struct ClipboardPanelView: View {
                 .padding(8)
             }
             // Scroll by the row's stable element id (matches the ForEach identity).
-            .onChange(of: selectedID) { _, id in
+            .onChange(of: app.selectedID) { _, id in
                 guard let id else { return }
                 withAnimation(.easeOut(duration: 0.1)) {
                     proxy.scrollTo(id, anchor: .center)
@@ -238,13 +233,13 @@ struct ClipboardPanelView: View {
         case .downArrow:
             if !app.items.isEmpty {
                 let next = min(selectedIndex + 1, app.items.count - 1)
-                selectedID = app.items[next].id
+                app.selectedID = app.items[next].id
             }
             return .handled
         case .upArrow:
             if !app.items.isEmpty {
                 let prev = max(selectedIndex - 1, 0)
-                selectedID = app.items[prev].id
+                app.selectedID = app.items[prev].id
             }
             return .handled
         case .escape:
@@ -271,7 +266,7 @@ struct ClipboardPanelView: View {
         let nextID: Int64? = idx + 1 < app.items.count ? app.items[idx + 1].id
             : (idx - 1 >= 0 ? app.items[idx - 1].id : nil)
         app.delete(victim)
-        selectedID = nextID ?? app.items.first?.id
+        app.selectedID = nextID ?? app.items.first?.id
     }
 }
 
