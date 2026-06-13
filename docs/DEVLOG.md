@@ -294,3 +294,29 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 ### Risks
 
 - None.
+
+## 2026-06-13 (change: always select top item when entering a section)
+
+### Done
+
+- Switching sections (sidebar click / `Shift+Cmd+↑↓`), searching, or reopening the
+  panel now always reselects the first item instead of remembering the previous
+  selection. Implemented via `AppState.selectionResetToken` (bumped from the
+  `searchText` / `sidebarSelection` setters); the panel resets `selectedID` on
+  token change. Live clipboard updates while viewing do not move the selection.
+
+### Files Changed
+
+- `Sources/ClipboardX/AppState.swift`, `ClipboardPanelView.swift`
+
+### Current Status
+
+- Builds, packages, relaunched.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- None.

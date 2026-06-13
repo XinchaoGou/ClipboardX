@@ -40,6 +40,10 @@ struct ClipboardPanelView: View {
                 selectedID = items.first?.id
             }
         }
+        .onChange(of: app.selectionResetToken) { _, _ in
+            // Always reselect the top item when entering a section / reopening.
+            selectedID = app.items.first?.id
+        }
         .onKeyPress(phases: .down) { press in handleKey(press) }
         .sheet(item: $editingItem) { item in
             EditTextView(text: item.contentText ?? "") { newText in

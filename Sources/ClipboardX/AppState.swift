@@ -19,11 +19,17 @@ final class AppState: ObservableObject {
     @Published var items: [ClipboardItem] = []
     @Published var groups: [Group] = []
     @Published var searchText: String = "" {
-        didSet { reload() }
+        didSet { reload(); requestSelectionReset() }
     }
     @Published var sidebarSelection: SidebarSelection = .history {
-        didSet { reload() }
+        didSet { reload(); requestSelectionReset() }
     }
+
+    /// Bumped whenever the panel should reset its selection to the first item
+    /// (e.g. on entering a section, searching, or reopening the panel).
+    @Published var selectionResetToken = 0
+
+    func requestSelectionReset() { selectionResetToken &+= 1 }
 
     init(store: ClipboardStore, settings: SettingsStore, paste: PasteExecutor) {
         self.store = store
