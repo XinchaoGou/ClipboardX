@@ -1,0 +1,105 @@
+# ARCHITECTURE.md
+
+Current, real architecture (not planned). Update when the architecture changes.
+
+## Tech stack
+
+- Language: Swift 5.9 (Swift 5 language mode), targeting macOS 14+.
+- UI: SwiftUI for the panel/settings, AppKit for the status item, panel window,
+  and global event plumbing.
+- Storage: system `sqlite3` accessed through an in-repo thin wrapper (`SQLite.swift`).
+- Packaging: Swift Package Manager executable, bundled into a `.app` by `build_app.sh`.
+- No third-party runtime dependencies.
+
+## Capture data flow
+
+```
+NSPasteboard.general
+        │  (poll changeCount every ~0.4s)
+        ▼
+PasteboardMonitor
+        │  frontmost app + concealed-type check
+        ▼
+AppFilter ──(excluded bundle id / concealed)──▶ skip
+        │
+        ▼
+ClipboardItemParser   (classify text/url/image/file,
+        │              write image + thumbnail to disk)
+        ▼
+ClipboardStore  ──▶  SQLite (clipboard.db)  +  images/ thumbs/ icons/
+        │  dedup by hash, enforce max-count cleanup
+        ▼
+AppState (@MainActor, ObservableObject)  ──▶  UI reload
+```
+
+## Paste data flow
+
+```
+UI (MenuBar / Panel)
+        ▼
+AppState.pasteItem
+        ▼
+PasteExecutor
+   ├─ write item back to NSPasteboard
+   ├─ tell PasteboardMonitor to ignore this self-write
+   ├─ simulate Cmd+V via CGEvent (needs Accessibility)
+   └─ optional: restore previous pasteboard contents
+```
+
+## Layers
+
+```
+UI            MenuBarController · ClipboardPanelView/PanelController · SettingsView
+  ↓
+Coordinator   AppState (@MainActor view model)
+  ↓
+Services      PasteboardMonitor · ClipboardItemParser · AppFilter ·
+              PasteExecutor · HotkeyManager · SettingsStore
+  ↓
+Storage       ClipboardStore  →  SQLite (thin wrapper)  +  on-disk files (Storage)
+```
+
+## Modules
+
+| File | Responsibility |
+| --- | --- |
+| `main.swift` | Entry point; boots `NSApplication` + `AppDelegate` |
+| `AppDelegate.swift` | Wires all components, sets `.accessory` policy, registers hotkeys |
+| `AppState.swift` | `@MainActor` coordinator/view model shared by all UI |
+| `PasteboardMonitor.swift` | Polls `changeCount`, filters, stores; ignores self-writes |
+| `ClipboardItemParser.swift` | Classifies content, persists images/thumbnails |
+| `AppFilter.swift` | Frontmost app, exclusion check, source-app icon caching |
+| `ClipboardStore.swift` | Schema, CRUD, search, pin, groups, max-count cleanup |
+| `SQLite.swift` | Throwing wrapper over the SQLite3 C API |
+| `Models.swift` | `ClipboardItem`, `Group`, `ItemType` |
+| `Storage.swift` | On-disk path resolution + directory creation |
+| `Hashing.swift` | SHA-256 content hashing (dedup + file naming) |
+| `MenuBarController.swift` | `NSStatusItem` dropdown menu |
+| `PanelController.swift` | Floating `NSPanel` host + show/hide/focus handling |
+| `ClipboardPanelView.swift` | SwiftUI search panel, list rows, edit sheet |
+| `HotkeyManager.swift` | Global hotkeys via Carbon `RegisterEventHotKey` |
+| `PasteExecutor.swift` | Pasteboard write-back + simulated Cmd+V + restore |
+| `SettingsStore.swift` | `UserDefaults`-backed preferences |
+| `SettingsView.swift` | SwiftUI settings + settings window controller |
+
+## Data model
+
+`items` (clipboard records), `groups`, `item_groups` (many-to-many join).
+Item fields: id, type, content_text, content_hash, file_paths_json, image_path,
+thumbnail_path, source_app_name/bundle_id/icon_path, created_at, updated_at,
+last_used_at, use_count, is_pinned, deleted_at.
+
+## On-disk layout
+
+```
+~/Library/Application Support/ClipboardX/
+├── clipboard.db      # SQLite (WAL mode)
+├── images/           # full-size copied images (PNG)
+├── thumbs/           # list thumbnails
+└── icons/            # cached source-app icons
+```
+
+## Permissions
+
+- **Accessibility** — required to synthesize Cmd+V on paste.
+- **Launch at Login** — via `SMAppService.mainApp` (works from the signed `.app`).
