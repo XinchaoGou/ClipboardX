@@ -295,6 +295,39 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - None.
 
+## 2026-06-13 (feature: formatted paste — Return vs Shift+Return)
+
+### Done
+
+- Capture rich text on copy: the parser saves the pasteboard's RTF (or HTML→RTF)
+  to `rtf/<hash>.rtf`; new `items.rtf_path` column (appended last, with migration)
+  + `Storage.rtfDir`. `removeFiles`/cleanup delete the RTF; `updateText` clears it.
+- Paste: `PasteExecutor.writeToPasteboard` writes RTF + plain fallback when not
+  plain; plain string only when plain. Panel: **Return** = formatted (existing
+  onSubmit), **Shift+Return** = plain via a hidden `keyboardShortcut(.return,
+  modifiers: .shift)` button (so the focused search field doesn't swallow it).
+- Verified capture against the live DB (bold/red RTF copied → `rtf_path` set, file
+  written). Updated PRODUCT/ARCHITECTURE/DECISIONS/ROADMAP.
+
+### Files Changed
+
+- `Sources/ClipboardX/Storage.swift`, `Models.swift`, `ClipboardStore.swift`,
+  `ClipboardItemParser.swift`, `PasteExecutor.swift`, `ClipboardPanelView.swift`,
+  `AppDelegate.swift`; docs.
+
+### Current Status
+
+- Builds, packages, relaunched. Return = formatted, Shift+Return = plain.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- Formatting fidelity depends on the source app providing RTF/HTML; if absent,
+  formatted paste is identical to plain (no harm).
+
 ## 2026-06-13 (fix: Cmd+Delete not firing)
 
 ### Done

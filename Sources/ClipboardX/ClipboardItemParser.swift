@@ -27,8 +27,10 @@ enum ClipboardItemParser {
             // whitespace or newlines (common with terminal copy-on-select) collapse
             // into one entry. The raw text is still stored for byte-exact pasting.
             let hash = Hashing.sha256(trimmed)
+            // Capture a rich (RTF) representation for formatted paste, if present.
+            let rtfPath = saveRichText(from: pasteboard, hash: hash)
             return base(type: isURL ? .url : .text, source: source, iconPath: iconPath,
-                        hash: hash, text: text, filePaths: [])
+                        hash: hash, text: text, filePaths: [], rtfPath: rtfPath)
         }
 
         // 3. Image data
@@ -52,15 +54,42 @@ enum ClipboardItemParser {
 
     private static func base(type: ItemType, source: AppFilter.FrontApp, iconPath: String?,
                              hash: String, text: String?, filePaths: [String],
-                             imagePath: String? = nil, thumbnailPath: String? = nil) -> ClipboardItem {
+                             imagePath: String? = nil, thumbnailPath: String? = nil,
+                             rtfPath: String? = nil) -> ClipboardItem {
         let now = Date()
         return ClipboardItem(
             id: 0, type: type, contentText: text, contentHash: hash,
             filePaths: filePaths, imagePath: imagePath, thumbnailPath: thumbnailPath,
+            rtfPath: rtfPath,
             sourceAppName: source.name, sourceAppBundleID: source.bundleID,
             sourceAppIconPath: iconPath, createdAt: now, updatedAt: now,
             lastUsedAt: nil, useCount: 0, isPinned: false
         )
+    }
+
+    /// Persist an RTF representation of the current text selection, if the source
+    /// app provided one (directly as RTF, or convertible from HTML). Returns the
+    /// file path, or nil when there is no usable formatting.
+    private static func saveRichText(from pasteboard: NSPasteboard, hash: String) -> String? {
+        var rtf: Data?
+        if let data = pasteboard.data(forType: .rtf) {
+            rtf = data
+        } else if let html = pasteboard.data(forType: .html),
+                  let attr = try? NSAttributedString(
+                      data: html,
+                      options: [.documentType: NSAttributedString.DocumentType.html],
+                      documentAttributes: nil) {
+            rtf = try? attr.data(from: NSRange(location: 0, length: attr.length),
+                                 documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf])
+        }
+        guard let rtf else { return nil }
+        let url = Storage.rtfDir.appendingPathComponent("\(hash).rtf")
+        do {
+            try rtf.write(to: url)
+            return url.path
+        } catch {
+            return nil
+        }
     }
 
     private static func looksLikeURL(_ s: String) -> Bool {

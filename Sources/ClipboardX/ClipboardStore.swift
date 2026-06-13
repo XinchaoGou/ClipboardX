@@ -24,6 +24,7 @@ final class ClipboardStore {
             file_paths_json TEXT,
             image_path TEXT,
             thumbnail_path TEXT,
+            rtf_path TEXT,
             source_app_name TEXT,
             source_app_bundle_id TEXT,
             source_app_icon_path TEXT,
@@ -58,9 +59,10 @@ final class ClipboardStore {
         );
         """)
 
-        // Migration: add sort_order to pre-existing item_groups tables. The ALTER
-        // throws if the column already exists, which is fine to ignore.
+        // Migrations for pre-existing DBs. ALTER throws if the column already
+        // exists, which is fine to ignore.
         try? db.execute("ALTER TABLE item_groups ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0;")
+        try? db.execute("ALTER TABLE items ADD COLUMN rtf_path TEXT;")
     }
 
     // MARK: - Row mapping
@@ -81,6 +83,7 @@ final class ClipboardStore {
             filePaths: filePaths,
             imagePath: r.string(5),
             thumbnailPath: r.string(6),
+            rtfPath: r.string(15),
             sourceAppName: r.string(7),
             sourceAppBundleID: r.string(8),
             sourceAppIconPath: r.string(9),
@@ -92,10 +95,11 @@ final class ClipboardStore {
         )
     }
 
+    // NOTE: rtf_path is appended last so existing column indices (0…14) are stable.
     private let itemColumns = """
     id, type, content_text, content_hash, file_paths_json, image_path, thumbnail_path,
     source_app_name, source_app_bundle_id, source_app_icon_path,
-    created_at, updated_at, last_used_at, use_count, is_pinned
+    created_at, updated_at, last_used_at, use_count, is_pinned, rtf_path
     """
 
     // MARK: - Inserts
@@ -113,10 +117,10 @@ final class ClipboardStore {
             .flatMap { String(data: $0, encoding: .utf8) }
         return try db.run("""
             INSERT INTO items
-            (type, content_text, content_hash, file_paths_json, image_path, thumbnail_path,
+            (type, content_text, content_hash, file_paths_json, image_path, thumbnail_path, rtf_path,
              source_app_name, source_app_bundle_id, source_app_icon_path,
              created_at, updated_at, last_used_at, use_count, is_pinned, deleted_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,0,0,NULL)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,0,0,NULL)
             """, [
                 item.type.rawValue.sql,
                 item.contentText.sql,
@@ -124,6 +128,7 @@ final class ClipboardStore {
                 filePathsJSON.sql,
                 item.imagePath.sql,
                 item.thumbnailPath.sql,
+                item.rtfPath.sql,
                 item.sourceAppName.sql,
                 item.sourceAppBundleID.sql,
                 item.sourceAppIconPath.sql,
@@ -206,7 +211,11 @@ final class ClipboardStore {
     func updateText(id: Int64, text: String) throws {
         let now = Date().timeIntervalSince1970
         let hash = Hashing.sha256(text.trimmingCharacters(in: .whitespacesAndNewlines))
-        try db.run("UPDATE items SET content_text = ?, content_hash = ?, updated_at = ? WHERE id = ?",
+        // Editing drops the original formatting; remove the stored RTF.
+        if let old = try item(id: id), let rtf = old.rtfPath {
+            try? FileManager.default.removeItem(atPath: rtf)
+        }
+        try db.run("UPDATE items SET content_text = ?, content_hash = ?, rtf_path = NULL, updated_at = ? WHERE id = ?",
                    [text.sql, hash.sql, now.sql, id.sql])
     }
 
@@ -261,7 +270,7 @@ final class ClipboardStore {
 
     private func removeFiles(for item: ClipboardItem) {
         let fm = FileManager.default
-        for p in [item.imagePath, item.thumbnailPath].compactMap({ $0 }) {
+        for p in [item.imagePath, item.thumbnailPath, item.rtfPath].compactMap({ $0 }) {
             try? fm.removeItem(atPath: p)
         }
     }

@@ -30,14 +30,18 @@ struct ClipboardPanelView: View {
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.08)))
-        // Cmd+Delete deletes the selection even while the search field is focused.
-        // A keyboard-shortcut button is used because the focused TextField would
-        // otherwise consume Cmd+Delete (delete-to-start-of-line).
+        // Hidden shortcut buttons. These route via the window's key-equivalent path
+        // so they fire even while the search field is focused (which would otherwise
+        // consume Cmd+Delete and Shift+Return).
         .background(
-            Button("", action: deleteSelected)
-                .keyboardShortcut(.delete, modifiers: .command)
-                .opacity(0)
-                .accessibilityHidden(true)
+            SwiftUI.Group {
+                Button("", action: deleteSelected)
+                    .keyboardShortcut(.delete, modifiers: .command)
+                Button("") { pasteSelected(plainText: true) }
+                    .keyboardShortcut(.return, modifiers: .shift)
+            }
+            .opacity(0)
+            .accessibilityHidden(true)
         )
         .onAppear {
             searchFocused = true
@@ -254,9 +258,9 @@ struct ClipboardPanelView: View {
         }
     }
 
-    private func pasteSelected() {
+    private func pasteSelected(plainText: Bool = false) {
         guard selectedIndex < app.items.count, !app.items.isEmpty else { return }
-        app.pasteItem(app.items[selectedIndex])
+        app.pasteItem(app.items[selectedIndex], plainText: plainText)
     }
 
     private func deleteSelected() {

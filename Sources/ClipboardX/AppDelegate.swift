@@ -66,7 +66,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let exec = PasteExecutor(settings: SettingsStore.shared)
         exec.monitor = monitor
         let item = ClipboardItem(id: 0, type: .text, contentText: text, contentHash: "",
-                                 filePaths: [], imagePath: nil, thumbnailPath: nil,
+                                 filePaths: [], imagePath: nil, thumbnailPath: nil, rtfPath: nil,
                                  sourceAppName: nil, sourceAppBundleID: nil, sourceAppIconPath: nil,
                                  createdAt: Date(), updatedAt: Date(), lastUsedAt: nil,
                                  useCount: 0, isPinned: false)

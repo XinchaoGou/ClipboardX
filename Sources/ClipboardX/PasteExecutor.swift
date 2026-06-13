@@ -53,6 +53,12 @@ final class PasteExecutor {
         pb.clearContents()
         switch item.type {
         case .text, .url:
+            // Formatted paste: include the stored RTF (apps that support it use it)
+            // plus a plain-text fallback. Plain paste: write only the plain string.
+            if !plainText, let rtfPath = item.rtfPath,
+               let rtf = try? Data(contentsOf: URL(fileURLWithPath: rtfPath)) {
+                pb.setData(rtf, forType: .rtf)
+            }
             pb.setString(item.contentText ?? "", forType: .string)
         case .image:
             if let path = item.imagePath, let img = NSImage(contentsOfFile: path) {
@@ -64,7 +70,6 @@ final class PasteExecutor {
                 pb.writeObjects(urls)
             }
         }
-        _ = plainText // text items are already plain; kept for API symmetry
     }
 
     private func simulateCommandV() {

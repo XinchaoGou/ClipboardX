@@ -107,8 +107,17 @@ last_used_at, use_count, is_pinned, deleted_at.
 ├── clipboard.db      # SQLite (WAL mode)
 ├── images/           # full-size copied images (PNG)
 ├── thumbs/           # list thumbnails
-└── icons/            # cached source-app icons
+├── icons/            # cached source-app icons
+└── rtf/              # captured RTF for formatted paste (path in items.rtf_path)
 ```
+
+## Rich text (formatted paste)
+
+When a text item is recorded, the source app's RTF (or HTML converted to RTF) is
+saved to `rtf/<hash>.rtf` and referenced by `items.rtf_path`. Pasting with
+**Return** writes the RTF plus a plain-text fallback (the target app picks the
+richest it supports); **Shift+Return** writes plain text only. Editing a text
+item clears its RTF.
 
 ## Permissions
 

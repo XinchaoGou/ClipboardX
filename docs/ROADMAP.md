@@ -21,6 +21,11 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
 
 - (none)
 
+## Done (recent additions continued)
+
+- Formatted paste: capture RTF on copy (`rtf/`, `items.rtf_path`); Return pastes
+  with formatting, Shift+Return pastes plain text; editing clears RTF.
+
 ## Done
 
 - v0.1 core loop: pasteboard monitoring → SQLite storage → menu bar → hotkey panel

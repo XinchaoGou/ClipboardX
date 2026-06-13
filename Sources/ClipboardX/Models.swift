@@ -18,6 +18,8 @@ struct ClipboardItem: Identifiable, Hashable {
     var filePaths: [String]
     var imagePath: String?
     var thumbnailPath: String?
+    /// Path to a stored RTF representation for rich (formatted) paste, if captured.
+    var rtfPath: String?
     var sourceAppName: String?
     var sourceAppBundleID: String?
     var sourceAppIconPath: String?

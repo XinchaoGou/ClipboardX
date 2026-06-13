@@ -62,6 +62,17 @@ Decision: Skip recording when the pasteboard carries `org.nspasteboard.Concealed
 Reason: Password managers mark secret copies as concealed/transient; honoring this
 convention prevents capturing secrets even from apps not on the blocklist.
 
+## 011
+
+Decision: Support formatted paste by capturing the source RTF on copy and storing
+it as a file (`rtf/<hash>.rtf`, path in `items.rtf_path`), rather than storing
+attributed strings in the DB or doing full rich-text editing.
+
+Reason: Users want Return = paste with formatting, Shift+Return = plain. Keeping
+the RTF as a file matches the existing "DB stores paths, binaries on disk" pattern
+and avoids adding BLOB support to the SQLite wrapper. We only pass formatting
+through (no rich-text editor); editing a text item drops its RTF.
+
 ## 009
 
 Decision: Run database access on the main thread for the MVP.

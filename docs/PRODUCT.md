@@ -35,7 +35,9 @@ manager. Not teams, not multi-device users.
 - No multi-device sync.
 - No account / login.
 - No subscription / paid features.
-- No full rich-text preservation (text is stored as plain text).
+- No rich-text *editing*. (Formatting is preserved for pass-through paste: the
+  RTF representation is captured on copy so Return pastes with formatting and
+  Shift+Return pastes plain text. Editing a text item drops its formatting.)
 - No OCR.
 - No AI summarization / rewriting.
 - No browser extension.
