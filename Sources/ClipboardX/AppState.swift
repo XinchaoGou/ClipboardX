@@ -9,12 +9,19 @@ final class AppState: ObservableObject {
     let settings: SettingsStore
     let paste: PasteExecutor
 
+    /// Which "table" the panel is showing.
+    enum SidebarSelection: Hashable {
+        case history
+        case pinned
+        case group(Int64)
+    }
+
     @Published var items: [ClipboardItem] = []
     @Published var groups: [Group] = []
     @Published var searchText: String = "" {
         didSet { reload() }
     }
-    @Published var selectedGroupID: Int64? {
+    @Published var sidebarSelection: SidebarSelection = .history {
         didSet { reload() }
     }
 
@@ -27,14 +34,16 @@ final class AppState: ObservableObject {
 
     func reload() {
         do {
-            if let gid = selectedGroupID {
-                let all = try store.itemsInGroup(gid)
-                let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            switch sidebarSelection {
+            case .history:
+                items = q.isEmpty ? try store.recentItems() : try store.search(searchText)
+            case .pinned:
+                let all = try store.pinnedItems()
                 items = q.isEmpty ? all : all.filter { $0.preview.lowercased().contains(q) }
-            } else if searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                items = try store.recentItems()
-            } else {
-                items = try store.search(searchText)
+            case .group(let gid):
+                let all = try store.itemsInGroup(gid)
+                items = q.isEmpty ? all : all.filter { $0.preview.lowercased().contains(q) }
             }
             groups = try store.groups()
         } catch {
@@ -83,7 +92,7 @@ final class AppState: ObservableObject {
 
     func deleteGroup(_ group: Group) {
         try? store.deleteGroup(id: group.id)
-        if selectedGroupID == group.id { selectedGroupID = nil }
+        if sidebarSelection == .group(group.id) { sidebarSelection = .history }
         reload()
     }
 
@@ -101,8 +110,8 @@ final class AppState: ObservableObject {
         Set((try? store.groupIDs(forItem: item.id)) ?? [])
     }
 
-    func clearHistory(keepPinned: Bool) {
-        try? store.clearAll(keepPinned: keepPinned)
+    func clearHistory(keepFavorites: Bool) {
+        try? store.clearAll(keepFavorites: keepFavorites)
         reload()
     }
 }

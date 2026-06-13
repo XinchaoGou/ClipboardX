@@ -17,16 +17,16 @@ struct ClipboardPanelView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            searchBar
+        HStack(spacing: 0) {
+            sidebar
             Divider()
-            if app.groups.isEmpty == false {
-                groupBar
+            VStack(spacing: 0) {
+                searchBar
                 Divider()
+                listView
             }
-            listView
         }
-        .frame(width: 640, height: 460)
+        .frame(width: 720, height: 460)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.08)))
@@ -66,33 +66,85 @@ struct ClipboardPanelView: View {
         .padding(.vertical, 12)
     }
 
-    private var groupBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                chip(title: "All", active: app.selectedGroupID == nil) { app.selectedGroupID = nil }
-                ForEach(app.groups) { g in
-                    chip(title: g.name, active: app.selectedGroupID == g.id) {
-                        app.selectedGroupID = (app.selectedGroupID == g.id) ? nil : g.id
+    // MARK: - Sidebar
+
+    private var sidebar: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            sidebarRow(title: "History", systemImage: "clock", selection: .history)
+            sidebarRow(title: "Pinned", systemImage: "pin", selection: .pinned)
+
+            if !app.groups.isEmpty {
+                Text("COLLECTIONS")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+                    .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 2)
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(app.groups) { g in
+                            sidebarRow(title: g.name, systemImage: "folder", selection: .group(g.id))
+                        }
                     }
                 }
+            } else {
+                Text("Create collections in Settings")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.tertiary)
+                    .padding(.horizontal, 12).padding(.top, 12)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
+            Spacer()
+        }
+        .padding(.vertical, 10)
+        .frame(width: 180)
+    }
+
+    private func sidebarRow(title: String, systemImage: String,
+                            selection: AppState.SidebarSelection) -> some View {
+        let active = app.sidebarSelection == selection
+        return Button {
+            app.sidebarSelection = selection
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: systemImage).frame(width: 16)
+                Text(title).lineLimit(1)
+                Spacer()
+            }
+            .font(.system(size: 13))
+            .foregroundStyle(active ? Color.white : Color.primary)
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(active ? Color.accentColor : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 8)
+    }
+
+    @ViewBuilder private var listView: some View {
+        if app.items.isEmpty {
+            VStack(spacing: 6) {
+                Spacer()
+                Image(systemName: "tray").font(.system(size: 28)).foregroundStyle(.tertiary)
+                Text(emptyMessage).font(.system(size: 13)).foregroundStyle(.secondary)
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            itemList
         }
     }
 
-    private func chip(title: String, active: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 12, weight: .medium))
-                .padding(.horizontal, 10).padding(.vertical, 4)
-                .background(active ? Color.accentColor : Color.secondary.opacity(0.15))
-                .foregroundStyle(active ? Color.white : Color.primary)
-                .clipShape(Capsule())
-        }.buttonStyle(.plain)
+    private var emptyMessage: String {
+        if !app.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return "No results"
+        }
+        switch app.sidebarSelection {
+        case .history: return "No clipboard history yet"
+        case .pinned: return "No pinned items"
+        case .group: return "This collection is empty"
+        }
     }
 
-    private var listView: some View {
+    private var itemList: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 2) {

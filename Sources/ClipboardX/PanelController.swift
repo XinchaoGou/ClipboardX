@@ -33,7 +33,7 @@ final class PanelController {
         previousApp = NSWorkspace.shared.frontmostApplication
 
         app.searchText = ""
-        app.selectedGroupID = nil
+        app.sidebarSelection = .history
         app.reload()
 
         let panel = self.panel ?? makePanel()
@@ -60,7 +60,7 @@ final class PanelController {
         let view = ClipboardPanelView(app: app)
         let hosting = NSHostingView(rootView: view)
         let panel = FloatingPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 640, height: 460),
+            contentRect: NSRect(x: 0, y: 0, width: 720, height: 460),
             styleMask: [.nonactivatingPanel, .titled, .fullSizeContentView],
             backing: .buffered, defer: false
         )

@@ -212,28 +212,38 @@ final class ClipboardStore {
         try db.run("DELETE FROM items WHERE id = ?", [id.sql])
     }
 
-    func clearAll(keepPinned: Bool) throws {
+    /// An item is a "favorite" (protected from auto-cleanup and from
+    /// "clear history") when it is pinned or belongs to at least one board.
+    private static let notFavoriteClause =
+        "is_pinned = 0 AND id NOT IN (SELECT item_id FROM item_groups)"
+
+    /// Clear history. When `keepFavorites` is true, pinned items and items that
+    /// belong to any board are preserved.
+    func clearAll(keepFavorites: Bool) throws {
+        let whereClause = keepFavorites ? " AND \(Self.notFavoriteClause)" : ""
         let items = try db.query(
-            "SELECT \(itemColumns) FROM items WHERE deleted_at IS NULL" + (keepPinned ? " AND is_pinned = 0" : ""),
+            "SELECT \(itemColumns) FROM items WHERE deleted_at IS NULL" + whereClause,
             map: mapItem
         )
         for it in items { removeFiles(for: it) }
-        if keepPinned {
-            try db.run("DELETE FROM items WHERE is_pinned = 0")
+        if keepFavorites {
+            try db.run("DELETE FROM items WHERE \(Self.notFavoriteClause)")
         } else {
             try db.run("DELETE FROM items")
         }
     }
 
-    /// Remove oldest non-pinned items beyond `maxCount`, cleaning files too.
+    /// Remove oldest non-favorite items beyond `maxCount`, cleaning files too.
+    /// Pinned items and board members are never auto-deleted.
     func enforceLimit(maxCount: Int) throws {
-        let total = try db.query("SELECT COUNT(*) FROM items WHERE deleted_at IS NULL AND is_pinned = 0",
-                                 map: { Int($0.int(0)) }).first ?? 0
+        let total = try db.query(
+            "SELECT COUNT(*) FROM items WHERE deleted_at IS NULL AND \(Self.notFavoriteClause)",
+            map: { Int($0.int(0)) }).first ?? 0
         guard total > maxCount else { return }
         let overflow = total - maxCount
         let victims = try db.query("""
             SELECT \(itemColumns) FROM items
-            WHERE deleted_at IS NULL AND is_pinned = 0
+            WHERE deleted_at IS NULL AND \(Self.notFavoriteClause)
             ORDER BY updated_at ASC
             LIMIT ?
             """, [overflow.sql], map: mapItem)

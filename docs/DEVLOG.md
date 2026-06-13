@@ -159,3 +159,43 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 ### Risks
 
 - None known for selection/hover after this change.
+
+## 2026-06-13 (feature: favorites/boards Phase 1 — iPaste-style)
+
+### Done
+
+- Discussed the favorites model against iPaste (Pin for single items, Groups as
+  named collections summonable on their own). Decided on Plan A: a single `items`
+  table where an item is a favorite (exempt from auto-cleanup) when pinned OR in
+  any board; favorites still appear in History; History/Pinned/board are filtered
+  views. Board create/delete stays in Settings; the panel uses a left sidebar.
+- `ClipboardStore`: auto-cleanup (`enforceLimit`) and `clearAll` now exempt
+  pinned items AND board members via `is_pinned = 0 AND id NOT IN (SELECT item_id
+  FROM item_groups)`. `clearAll(keepPinned:)` → `clearAll(keepFavorites:)`.
+- `AppState`: replaced `selectedGroupID` with a `SidebarSelection` enum
+  (`history` / `pinned` / `group(id)`); `reload()` switches on it.
+- `ClipboardPanelView`: replaced the top chip bar with a left sidebar (History,
+  Pinned, COLLECTIONS list); widened the panel to 720pt; added empty-state views.
+- `SettingsView`: relabeled clear buttons to "keep favorites".
+- Verified cleanup-exemption SQL on a throwaway DB (pinned + board members spared).
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardStore.swift`, `AppState.swift`,
+  `ClipboardPanelView.swift`, `PanelController.swift`, `SettingsView.swift`
+- `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`
+
+### Current Status
+
+- Builds, packages, relaunched. Sidebar switches between History / Pinned /
+  collections; favorites survive auto-cleanup and "clear history (keep favorites)".
+
+### Next
+
+- Phase 2: manual ordering in boards (`item_groups.sort_order`), per-board and
+  pinned quick hotkeys, boards submenu in the menu bar.
+
+### Risks
+
+- Existing rows created before this change are unaffected; board membership is
+  evaluated live so no migration is needed.

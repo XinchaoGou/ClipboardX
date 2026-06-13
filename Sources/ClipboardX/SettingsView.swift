@@ -27,8 +27,8 @@ struct SettingsView: View {
                     Text("Max history items: \(settings.maxHistoryCount)")
                 }
                 HStack {
-                    Button("Clear history (keep pinned)") { app.clearHistory(keepPinned: true) }
-                    Button("Clear all", role: .destructive) { app.clearHistory(keepPinned: false) }
+                    Button("Clear history (keep favorites)") { app.clearHistory(keepFavorites: true) }
+                    Button("Clear all", role: .destructive) { app.clearHistory(keepFavorites: false) }
                 }
             }
             Section("Paste") {

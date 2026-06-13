@@ -4,6 +4,9 @@ Project progress. Agents update this after every task.
 
 ## Backlog
 
+- Boards/favorites Phase 2: manual ordering within a board
+  (`item_groups.sort_order`, move up/down), per-board + pinned quick hotkeys
+  (iPaste-style `Ctrl+Cmd+A/B/C` and letter-paste), boards submenu in the menu bar.
 - Custom hotkey recording UI (let users rebind `Shift+Cmd+V`, `Ctrl+Cmd+V`, quick-paste).
 - Verify / harden Launch at Login from the signed `.app` bundle.
 - Import / export history.
@@ -31,3 +34,8 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
 - Project documentation system (README, AGENTS, docs/*).
 - Bugfix: dedup text/url on trimmed content so whitespace-only variants
   (e.g. iTerm2 copy-on-select) no longer create visually identical duplicate rows.
+- Bugfix: reliable panel hover/selection (tracked by item id) + full-row hit testing.
+- Boards/favorites Phase 1 (iPaste-style): unified `items` table where pinned or
+  board-member items are exempt from auto-cleanup; panel left sidebar to switch
+  between History / Pinned / each board; "clear history" keeps favorites. Board
+  create/delete lives in Settings.

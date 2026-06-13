@@ -82,9 +82,19 @@ Storage       ClipboardStore  →  SQLite (thin wrapper)  +  on-disk files (Stor
 | `SettingsStore.swift` | `UserDefaults`-backed preferences |
 | `SettingsView.swift` | SwiftUI settings + settings window controller |
 
+## Favorites model (boards)
+
+There is a single `items` table. An item is a "favorite" — and therefore exempt
+from auto-cleanup and from "clear history (keep favorites)" — when it is
+**pinned** (`is_pinned = 1`) OR it belongs to **at least one board** (a row in
+`item_groups`). Boards are the user's named collections (the `groups` table).
+Favoriting an item does not remove it from History; History, Pinned and each
+board are filtered views over the same rows (`AppState.SidebarSelection`).
+
 ## Data model
 
-`items` (clipboard records), `groups`, `item_groups` (many-to-many join).
+`items` (clipboard records), `groups` (a.k.a. boards/collections),
+`item_groups` (many-to-many join).
 Item fields: id, type, content_text, content_hash, file_paths_json, image_path,
 thumbnail_path, source_app_name/bundle_id/icon_path, created_at, updated_at,
 last_used_at, use_count, is_pinned, deleted_at.
