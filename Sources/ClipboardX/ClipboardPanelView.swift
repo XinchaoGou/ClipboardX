@@ -70,8 +70,8 @@ struct ClipboardPanelView: View {
 
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 2) {
-            sidebarRow(title: "History", systemImage: "clock", selection: .history)
-            sidebarRow(title: "Pinned", systemImage: "pin", selection: .pinned)
+            sidebarRow(title: "History", systemImage: "clock", selection: .history, hint: "⇧⌘V")
+            sidebarRow(title: "Pinned", systemImage: "pin", selection: .pinned, hint: "⌃⌘0")
 
             if !app.groups.isEmpty {
                 Text("COLLECTIONS")
@@ -80,8 +80,10 @@ struct ClipboardPanelView: View {
                     .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 2)
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 2) {
-                        ForEach(app.groups) { g in
-                            sidebarRow(title: g.name, systemImage: "folder", selection: .group(g.id))
+                        ForEach(Array(app.groups.enumerated()), id: \.element.id) { index, g in
+                            sidebarRow(title: g.name, systemImage: "folder",
+                                       selection: .group(g.id),
+                                       hint: index < 9 ? "⌃⌘\(index + 1)" : nil)
                         }
                     }
                 }
@@ -98,7 +100,8 @@ struct ClipboardPanelView: View {
     }
 
     private func sidebarRow(title: String, systemImage: String,
-                            selection: AppState.SidebarSelection) -> some View {
+                            selection: AppState.SidebarSelection,
+                            hint: String? = nil) -> some View {
         let active = app.sidebarSelection == selection
         return Button {
             app.sidebarSelection = selection
@@ -107,6 +110,10 @@ struct ClipboardPanelView: View {
                 Image(systemName: systemImage).frame(width: 16)
                 Text(title).lineLimit(1)
                 Spacer()
+                if let hint {
+                    Text(hint).font(.system(size: 9, design: .monospaced))
+                        .foregroundStyle(active ? Color.white.opacity(0.8) : Color.secondary.opacity(0.6))
+                }
             }
             .font(.system(size: 13))
             .foregroundStyle(active ? Color.white : Color.primary)
@@ -301,6 +308,10 @@ struct ClipboardRowView: View {
 
     private var rowActions: some View {
         HStack(spacing: 6) {
+            if app.isViewingBoard {
+                iconButton("arrow.up") { app.moveItemInBoard(item, up: true) }
+                iconButton("arrow.down") { app.moveItemInBoard(item, up: false) }
+            }
             iconButton("doc.on.clipboard") { app.copyItem(item) }
             iconButton(item.isPinned ? "pin.slash" : "pin") { app.togglePin(item) }
             if item.type == .text || item.type == .url {
@@ -323,7 +334,7 @@ struct ClipboardRowView: View {
             Button("Edit") { onEdit() }
         }
         if !app.groups.isEmpty {
-            Menu("Add to Group") {
+            Menu("Add to Collection") {
                 let inGroups = app.groupIDs(for: item)
                 ForEach(app.groups) { g in
                     Button {
@@ -334,6 +345,12 @@ struct ClipboardRowView: View {
                     }
                 }
             }
+        }
+        if app.isViewingBoard, let board = app.currentBoard {
+            Divider()
+            Button("Move Up") { app.moveItemInBoard(item, up: true) }
+            Button("Move Down") { app.moveItemInBoard(item, up: false) }
+            Button("Remove from \(board.name)") { app.removeItem(item, fromGroup: board) }
         }
         Divider()
         Button("Delete", role: .destructive) { app.delete(item) }

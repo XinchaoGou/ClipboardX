@@ -62,6 +62,28 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             }
         }
 
+        // Collections (boards)
+        let boards = (try? app.store.groups()) ?? []
+        if !boards.isEmpty {
+            menu.addItem(.separator())
+            menu.addItem(sectionHeader("Collections"))
+            for board in boards {
+                let submenu = NSMenu()
+                let boardItems = (try? app.store.itemsInGroup(board.id)) ?? []
+                if boardItems.isEmpty {
+                    let empty = NSMenuItem(title: "Empty", action: nil, keyEquivalent: "")
+                    empty.isEnabled = false
+                    submenu.addItem(empty)
+                } else {
+                    for it in boardItems.prefix(20) { submenu.addItem(makeItem(it)) }
+                }
+                let boardItem = NSMenuItem(title: board.name, action: nil, keyEquivalent: "")
+                boardItem.submenu = submenu
+                boardItem.image = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
+                menu.addItem(boardItem)
+            }
+        }
+
         menu.addItem(.separator())
         let settings = NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
         settings.target = self

@@ -199,3 +199,43 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - Existing rows created before this change are unaffected; board membership is
   evaluated live so no migration is needed.
+
+## 2026-06-13 (feature: favorites/boards Phase 2)
+
+### Done
+
+- Per-board manual ordering: added `item_groups.sort_order` (with an idempotent
+  `ALTER TABLE` migration for existing DBs). `addItem(toGroup:)` appends to the
+  end; `itemsInGroup` orders by `sort_order`; new `setGroupOrder` persists a full
+  ordering. `AppState.moveItemInBoard(_:up:)` swaps neighbours. Panel shows
+  up/down buttons (and context-menu Move Up/Down + "Remove from <board>") only
+  when viewing a board.
+- Menu bar: added a "Collections" section where each board is a submenu of its
+  items (click to paste).
+- Global hotkeys: `Ctrl+Cmd+0` opens Pinned, `Ctrl+Cmd+1…9` open the first 9
+  boards pre-filtered. Keys are registered once; the board is looked up live at
+  trigger time (no re-registration when boards change). `PanelController.show`
+  now takes a `selection`; `AppState.open(_:)` added. Sidebar shows hotkey hints.
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardStore.swift`, `AppState.swift`,
+  `ClipboardPanelView.swift`, `MenuBarController.swift`, `HotkeyManager.swift`,
+  `AppDelegate.swift`, `PanelController.swift`
+- `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`
+
+### Current Status
+
+- Builds, packages, relaunched. Verified `sort_order` migration + ordering and
+  reorder against the live DB.
+
+### Next
+
+- Custom hotkey recording UI (also lets users remap the auto-assigned board keys).
+- Drag-to-reorder within a board.
+
+### Risks
+
+- Board global hotkeys are auto-assigned by board order (first 9); remapping waits
+  for the custom-hotkey UI. `Ctrl+Cmd+1…9` could in theory clash with a user's own
+  global shortcuts.

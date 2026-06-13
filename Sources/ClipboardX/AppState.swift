@@ -101,6 +101,37 @@ final class AppState: ObservableObject {
         reload()
     }
 
+    /// Move an item up/down within the currently-selected board.
+    func moveItemInBoard(_ item: ClipboardItem, up: Bool) {
+        guard case .group(let gid) = sidebarSelection,
+              let idx = items.firstIndex(where: { $0.id == item.id }) else { return }
+        let target = up ? idx - 1 : idx + 1
+        guard target >= 0, target < items.count else { return }
+        var ids = items.map(\.id)
+        ids.swapAt(idx, target)
+        try? store.setGroupOrder(groupID: gid, orderedItemIDs: ids)
+        reload()
+    }
+
+    var isViewingBoard: Bool {
+        if case .group = sidebarSelection { return true }
+        return false
+    }
+
+    var currentBoard: Group? {
+        if case .group(let gid) = sidebarSelection {
+            return groups.first { $0.id == gid }
+        }
+        return nil
+    }
+
+    /// Open the panel pre-filtered to a specific sidebar selection.
+    func open(_ selection: SidebarSelection) {
+        searchText = ""
+        sidebarSelection = selection
+        reload()
+    }
+
     func removeItem(_ item: ClipboardItem, fromGroup group: Group) {
         try? store.removeItem(item.id, fromGroup: group.id)
         reload()

@@ -77,7 +77,7 @@ Storage       ClipboardStore  →  SQLite (thin wrapper)  +  on-disk files (Stor
 | `MenuBarController.swift` | `NSStatusItem` dropdown menu |
 | `PanelController.swift` | Floating `NSPanel` host + show/hide/focus handling |
 | `ClipboardPanelView.swift` | SwiftUI search panel, list rows, edit sheet |
-| `HotkeyManager.swift` | Global hotkeys via Carbon `RegisterEventHotKey` |
+| `HotkeyManager.swift` | Global hotkeys via Carbon `RegisterEventHotKey` (toggle panel, plain-text paste, `Ctrl+Cmd+0` Pinned, `Ctrl+Cmd+1…9` boards) |
 | `PasteExecutor.swift` | Pasteboard write-back + simulated Cmd+V + restore |
 | `SettingsStore.swift` | `UserDefaults`-backed preferences |
 | `SettingsView.swift` | SwiftUI settings + settings window controller |
@@ -94,7 +94,7 @@ board are filtered views over the same rows (`AppState.SidebarSelection`).
 ## Data model
 
 `items` (clipboard records), `groups` (a.k.a. boards/collections),
-`item_groups` (many-to-many join).
+`item_groups` (many-to-many join, with `sort_order` for per-board manual ordering).
 Item fields: id, type, content_text, content_hash, file_paths_json, image_path,
 thumbnail_path, source_app_name/bundle_id/icon_path, created_at, updated_at,
 last_used_at, use_count, is_pinned, deleted_at.

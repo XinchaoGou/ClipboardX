@@ -4,10 +4,9 @@ Project progress. Agents update this after every task.
 
 ## Backlog
 
-- Boards/favorites Phase 2: manual ordering within a board
-  (`item_groups.sort_order`, move up/down), per-board + pinned quick hotkeys
-  (iPaste-style `Ctrl+Cmd+A/B/C` and letter-paste), boards submenu in the menu bar.
-- Custom hotkey recording UI (let users rebind `Shift+Cmd+V`, `Ctrl+Cmd+V`, quick-paste).
+- Custom hotkey recording UI (let users rebind `Shift+Cmd+V`, `Ctrl+Cmd+V`,
+  quick-paste, and the per-board/Pinned hotkeys currently auto-assigned).
+- Drag-to-reorder within a board (currently move up/down buttons).
 - Verify / harden Launch at Login from the signed `.app` bundle.
 - Import / export history.
 - Performance pass: move DB writes off the main thread; lazy thumbnail loading.
@@ -39,3 +38,7 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
   board-member items are exempt from auto-cleanup; panel left sidebar to switch
   between History / Pinned / each board; "clear history" keeps favorites. Board
   create/delete lives in Settings.
+- Boards/favorites Phase 2: per-board manual ordering (`item_groups.sort_order`,
+  move up/down buttons + context menu); Collections submenu in the menu bar;
+  global hotkeys `Ctrl+Cmd+0` (Pinned) and `Ctrl+Cmd+1…9` (first 9 boards) that
+  open the panel pre-filtered; hotkey hints shown in the sidebar.

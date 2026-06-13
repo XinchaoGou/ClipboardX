@@ -33,16 +33,21 @@ final class HotkeyManager {
     }
 
     func register(keyCode: UInt32, modifiers: UInt32, action: Action, handler: @escaping () -> Void) {
+        register(keyCode: keyCode, modifiers: modifiers, id: action.rawValue, handler: handler)
+    }
+
+    /// Register a hotkey under an arbitrary numeric id.
+    func register(keyCode: UInt32, modifiers: UInt32, id: UInt32, handler: @escaping () -> Void) {
         installEventHandlerIfNeeded()
-        handlers[action.rawValue] = handler
+        handlers[id] = handler
         var ref: EventHotKeyRef?
-        let hotKeyID = EventHotKeyID(signature: OSType(0x43_4C_58_31), id: action.rawValue) // 'CLX1'
+        let hotKeyID = EventHotKeyID(signature: OSType(0x43_4C_58_31), id: id) // 'CLX1'
         let status = RegisterEventHotKey(keyCode, modifiers, hotKeyID,
                                          GetApplicationEventTarget(), 0, &ref)
         if status == noErr {
             hotKeyRefs.append(ref)
         } else {
-            NSLog("ClipboardX: failed to register hotkey id=\(action.rawValue) status=\(status)")
+            NSLog("ClipboardX: failed to register hotkey id=\(id) status=\(status)")
         }
     }
 

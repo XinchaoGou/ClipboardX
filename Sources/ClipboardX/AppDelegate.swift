@@ -1,4 +1,5 @@
 import AppKit
+import Carbon.HIToolbox
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -48,11 +49,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             togglePanel: { [weak self] in self?.panelController.toggle() },
             pastePlainText: { [weak self] in self?.pastePlainTextFromClipboard() }
         )
+        registerBoardHotkeys()
 
         // First-run nudge for Accessibility so paste works.
         if !PasteExecutor.hasAccessibilityPermission {
             PasteExecutor.requestAccessibilityPermission()
         }
+    }
+
+    /// Ctrl+Cmd+0 opens Pinned; Ctrl+Cmd+1…9 open the Nth collection.
+    /// Keys are registered once; the board lookup happens live at trigger time so
+    /// no re-registration is needed when collections are created/deleted.
+    private func registerBoardHotkeys() {
+        let mods = UInt32(cmdKey | controlKey)
+        hotkeys.register(keyCode: UInt32(kVK_ANSI_0), modifiers: mods, id: 99) { [weak self] in
+            self?.panelController.show(selection: .pinned)
+        }
+        let digitKeys = [kVK_ANSI_1, kVK_ANSI_2, kVK_ANSI_3, kVK_ANSI_4, kVK_ANSI_5,
+                         kVK_ANSI_6, kVK_ANSI_7, kVK_ANSI_8, kVK_ANSI_9]
+        for (index, key) in digitKeys.enumerated() {
+            hotkeys.register(keyCode: UInt32(key), modifiers: mods, id: UInt32(100 + index)) { [weak self] in
+                self?.openBoard(at: index)
+            }
+        }
+    }
+
+    private func openBoard(at index: Int) {
+        let boards = appState.groups
+        guard index < boards.count else { return }
+        panelController.show(selection: .group(boards[index].id))
     }
 
     /// Ctrl+Cmd+V: re-paste the current clipboard as plain text into the front app.

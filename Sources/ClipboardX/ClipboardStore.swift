@@ -51,11 +51,16 @@ final class ClipboardStore {
         CREATE TABLE IF NOT EXISTS item_groups (
             item_id INTEGER NOT NULL,
             group_id INTEGER NOT NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0,
             PRIMARY KEY (item_id, group_id),
             FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
             FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
         );
         """)
+
+        // Migration: add sort_order to pre-existing item_groups tables. The ALTER
+        // throws if the column already exists, which is fine to ignore.
+        try? db.execute("ALTER TABLE item_groups ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0;")
     }
 
     // MARK: - Row mapping
@@ -278,8 +283,11 @@ final class ClipboardStore {
     }
 
     func addItem(_ itemID: Int64, toGroup groupID: Int64) throws {
-        try db.run("INSERT OR IGNORE INTO item_groups (item_id, group_id) VALUES (?,?)",
-                   [itemID.sql, groupID.sql])
+        // Append to the end of the board's manual order.
+        let next = try db.query("SELECT COALESCE(MAX(sort_order), -1) + 1 FROM item_groups WHERE group_id = ?",
+                                [groupID.sql], map: { Int($0.int(0)) }).first ?? 0
+        try db.run("INSERT OR IGNORE INTO item_groups (item_id, group_id, sort_order) VALUES (?,?,?)",
+                   [itemID.sql, groupID.sql, next.sql])
     }
 
     func removeItem(_ itemID: Int64, fromGroup groupID: Int64) throws {
@@ -293,8 +301,16 @@ final class ClipboardStore {
             FROM items i
             JOIN item_groups ig ON ig.item_id = i.id
             WHERE ig.group_id = ? AND i.deleted_at IS NULL
-            ORDER BY i.updated_at DESC
+            ORDER BY ig.sort_order ASC, i.updated_at DESC
             """, [groupID.sql], map: mapItem)
+    }
+
+    /// Persist a manual ordering for a board (sort_order = position in the array).
+    func setGroupOrder(groupID: Int64, orderedItemIDs: [Int64]) throws {
+        for (index, id) in orderedItemIDs.enumerated() {
+            try db.run("UPDATE item_groups SET sort_order = ? WHERE group_id = ? AND item_id = ?",
+                       [index.sql, groupID.sql, id.sql])
+        }
     }
 
     func groupIDs(forItem itemID: Int64) throws -> [Int64] {

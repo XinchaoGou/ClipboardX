@@ -28,13 +28,13 @@ final class PanelController {
         }
     }
 
-    func show() {
+    func show(selection: AppState.SidebarSelection = .history) {
         // Remember who was frontmost so paste targets the right app.
-        previousApp = NSWorkspace.shared.frontmostApplication
+        if panel?.isVisible != true {
+            previousApp = NSWorkspace.shared.frontmostApplication
+        }
 
-        app.searchText = ""
-        app.sidebarSelection = .history
-        app.reload()
+        app.open(selection)
 
         let panel = self.panel ?? makePanel()
         self.panel = panel
