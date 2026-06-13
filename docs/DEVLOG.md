@@ -295,6 +295,32 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - None.
 
+## 2026-06-13 (fix: Cmd+Delete not firing)
+
+### Done
+
+- Cmd+Delete did nothing because the focused search `TextField` consumed it
+  (delete-to-start-of-line). Replaced the `onKeyPress` branch with a hidden
+  `Button(...).keyboardShortcut(.delete, modifiers: .command)`, which is dispatched
+  via the window's key-equivalent path before the text field's keyDown, so it works
+  regardless of focus.
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardPanelView.swift`
+
+### Current Status
+
+- Builds, packages, relaunched.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- None.
+
 ## 2026-06-13 (change: remove copy/delete row buttons; Cmd+Delete to delete)
 
 ### Done

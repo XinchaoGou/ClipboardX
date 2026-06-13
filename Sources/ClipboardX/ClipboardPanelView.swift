@@ -30,6 +30,15 @@ struct ClipboardPanelView: View {
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.08)))
+        // Cmd+Delete deletes the selection even while the search field is focused.
+        // A keyboard-shortcut button is used because the focused TextField would
+        // otherwise consume Cmd+Delete (delete-to-start-of-line).
+        .background(
+            Button("", action: deleteSelected)
+                .keyboardShortcut(.delete, modifiers: .command)
+                .opacity(0)
+                .accessibilityHidden(true)
+        )
         .onAppear {
             searchFocused = true
             selectedID = app.items.first?.id
@@ -211,11 +220,6 @@ struct ClipboardPanelView: View {
             case .upArrow: switchSection(by: -1); return .handled
             default: break
             }
-        }
-        // Cmd + Delete → delete the selected item, keeping selection nearby
-        if press.modifiers.contains(.command), press.key == .delete {
-            deleteSelected()
-            return .handled
         }
         // Cmd + 1...9 → quick paste
         if press.modifiers.contains(.command),
