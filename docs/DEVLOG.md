@@ -96,3 +96,34 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - Leading whitespace of a snippet's first line is ignored for dedup purposes
   only; stored/pasted content is unchanged, so paste fidelity is preserved.
+
+## 2026-06-13 (bugfix: pin reorder / ghost rows in panel)
+
+### Done
+
+- Fixed panel rows rendering incorrectly after the list reorders (e.g. after
+  pinning): rows could appear duplicated or keep stale hover/selection highlights
+  on the wrong position. Cause: each row had an extra `.id(index)` (positional
+  identity) on top of the `ForEach(id: \.element.id)` element identity. The two
+  identities conflicted, so `@State` (hover) and view reuse tracked position
+  instead of the item. Removed `.id(index)`; `scrollTo` now targets the row's
+  stable element id. Verified pin works at the data layer (item flagged
+  `is_pinned` and sorted to the top of the list).
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardPanelView.swift`
+
+### Current Status
+
+- Builds, packages, relaunched. Pin moves items to the top cleanly without
+  ghost/duplicate rows.
+
+### Next
+
+- Resume Backlog: custom hotkey recording UI (pending user confirmation).
+
+### Risks
+
+- Index-based `selection` still points to a position; after a reorder it may land
+  on a neighbouring item. Cosmetic only; can switch selection to track item id later.

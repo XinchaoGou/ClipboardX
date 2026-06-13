@@ -94,14 +94,20 @@ struct ClipboardPanelView: View {
                             onActivate: { selection = index; pasteSelected() },
                             onEdit: { editingItem = item }
                         )
-                        .id(index)
                         .onTapGesture { selection = index; pasteSelected() }
                     }
                 }
                 .padding(8)
             }
+            // Scroll by the row's stable element id (matches the ForEach identity).
+            // Do NOT add an extra `.id(index)` to rows — a positional identity that
+            // conflicts with the element identity causes ghost/duplicate rows when
+            // the list reorders (e.g. after pinning).
             .onChange(of: selection) { _, new in
-                withAnimation(.easeOut(duration: 0.1)) { proxy.scrollTo(new, anchor: .center) }
+                guard new < app.items.count else { return }
+                withAnimation(.easeOut(duration: 0.1)) {
+                    proxy.scrollTo(app.items[new].id, anchor: .center)
+                }
             }
         }
     }
