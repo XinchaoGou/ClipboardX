@@ -29,3 +29,5 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
 - SwiftPM project + `.app` packaging script (`build_app.sh`) with ad-hoc signing.
 - Dedup by content hash; max-count auto-cleanup that also deletes on-disk files.
 - Project documentation system (README, AGENTS, docs/*).
+- Bugfix: dedup text/url on trimmed content so whitespace-only variants
+  (e.g. iTerm2 copy-on-select) no longer create visually identical duplicate rows.

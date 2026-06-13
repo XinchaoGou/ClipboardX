@@ -199,7 +199,7 @@ final class ClipboardStore {
 
     func updateText(id: Int64, text: String) throws {
         let now = Date().timeIntervalSince1970
-        let hash = Hashing.sha256(text)
+        let hash = Hashing.sha256(text.trimmingCharacters(in: .whitespacesAndNewlines))
         try db.run("UPDATE items SET content_text = ?, content_hash = ?, updated_at = ? WHERE id = ?",
                    [text.sql, hash.sql, now.sql, id.sql])
     }

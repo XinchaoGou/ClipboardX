@@ -65,3 +65,34 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 ### Risks
 
 - None introduced by documentation changes.
+
+## 2026-06-13 (bugfix: whitespace duplicate entries)
+
+### Done
+
+- Fixed a bug where copies differing only by trailing/leading whitespace or
+  newlines (common with iTerm2 copy-on-select) created multiple history rows that
+  looked identical in the preview (the preview is trimmed). Dedup hash for
+  text/url is now computed from the trimmed text; raw text is still stored for
+  byte-exact pasting. `ClipboardStore.updateText` hashes trimmed text too.
+- Reproduced via terminal (3 whitespace variants → 3 rows before; 4 variants → 1
+  row after the fix). Cleaned up test rows.
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardItemParser.swift`, `Sources/ClipboardX/ClipboardStore.swift`
+- `docs/DECISIONS.md` (entry 010), `docs/ROADMAP.md`
+
+### Current Status
+
+- Builds and packages cleanly; dedup now collapses whitespace-only variants.
+- Note: pre-existing rows are not retroactively merged; only new copies dedup.
+
+### Next
+
+- Resume Backlog: custom hotkey recording UI (pending user confirmation).
+
+### Risks
+
+- Leading whitespace of a snippet's first line is ignored for dedup purposes
+  only; stored/pasted content is unchanged, so paste fidelity is preserved.

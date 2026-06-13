@@ -23,7 +23,10 @@ enum ClipboardItemParser {
            !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
             let isURL = looksLikeURL(trimmed)
-            let hash = Hashing.sha256(text)
+            // Dedup on the trimmed text so copies differing only by leading/trailing
+            // whitespace or newlines (common with terminal copy-on-select) collapse
+            // into one entry. The raw text is still stored for byte-exact pasting.
+            let hash = Hashing.sha256(trimmed)
             return base(type: isURL ? .url : .text, source: source, iconPath: iconPath,
                         hash: hash, text: text, filePaths: [])
         }

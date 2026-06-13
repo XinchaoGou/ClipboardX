@@ -68,3 +68,14 @@ Decision: Run database access on the main thread for the MVP.
 
 Reason: Text operations are sub-millisecond and this avoids concurrency bugs.
 Moving writes off-main is tracked in the roadmap as a later performance task.
+
+## 010
+
+Decision: For text/url items, compute the dedup hash from the whitespace-trimmed
+text, while still storing the raw text for pasting.
+
+Reason: Terminal "copy-on-select" (e.g. iTerm2) frequently produces copies that
+differ only by a trailing newline or space. Hashing the raw text left these as
+separate rows, yet the trimmed preview made them look identical — appearing as a
+"duplicate" bug. Hashing the trimmed text collapses these visual duplicates into
+one entry; keeping the raw text preserves byte-exact paste fidelity.
