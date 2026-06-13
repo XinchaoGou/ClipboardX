@@ -295,6 +295,31 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - None.
 
+## 2026-06-13 (change: remove copy/delete row buttons; Cmd+Delete to delete)
+
+### Done
+
+- Removed the per-row Copy and Delete buttons. Row actions are now: move up/down
+  (in a board), the pin toggle, and edit (text/url). Delete is via `Cmd+Delete` on
+  the selected item; selection moves to a neighbour afterwards. (Copy/Delete are
+  still available in the right-click context menu.)
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardPanelView.swift`
+
+### Current Status
+
+- Builds, packages, relaunched.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- None.
+
 ## 2026-06-13 (change: single pin toggle button)
 
 ### Done

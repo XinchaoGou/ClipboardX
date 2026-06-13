@@ -212,6 +212,11 @@ struct ClipboardPanelView: View {
             default: break
             }
         }
+        // Cmd + Delete → delete the selected item, keeping selection nearby
+        if press.modifiers.contains(.command), press.key == .delete {
+            deleteSelected()
+            return .handled
+        }
         // Cmd + 1...9 → quick paste
         if press.modifiers.contains(.command),
            let n = Int(press.characters), n >= 1, n <= 9 {
@@ -248,6 +253,17 @@ struct ClipboardPanelView: View {
     private func pasteSelected() {
         guard selectedIndex < app.items.count, !app.items.isEmpty else { return }
         app.pasteItem(app.items[selectedIndex])
+    }
+
+    private func deleteSelected() {
+        let idx = selectedIndex
+        guard idx < app.items.count, !app.items.isEmpty else { return }
+        let victim = app.items[idx]
+        // Pick a neighbour to keep the cursor near where it was.
+        let nextID: Int64? = idx + 1 < app.items.count ? app.items[idx + 1].id
+            : (idx - 1 >= 0 ? app.items[idx - 1].id : nil)
+        app.delete(victim)
+        selectedID = nextID ?? app.items.first?.id
     }
 }
 
@@ -338,7 +354,6 @@ struct ClipboardRowView: View {
                 iconButton("arrow.up") { app.moveItemInBoard(item, up: true) }
                 iconButton("arrow.down") { app.moveItemInBoard(item, up: false) }
             }
-            iconButton("doc.on.clipboard") { app.copyItem(item) }
             // Single pin toggle; colour/fill conveys the pinned state.
             Button { app.togglePin(item) } label: {
                 Image(systemName: item.isPinned ? "pin.fill" : "pin").font(.system(size: 12))
@@ -349,7 +364,6 @@ struct ClipboardRowView: View {
             if item.type == .text || item.type == .url {
                 iconButton("pencil") { onEdit() }
             }
-            iconButton("trash") { app.delete(item) }
         }
     }
 
