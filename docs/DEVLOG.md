@@ -295,6 +295,33 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - None.
 
+## 2026-06-13 (chore: app icon + install to /Applications)
+
+### Done
+
+- Added an app icon: generated a clipboard-stack artwork, then `scripts/make_icon.swift`
+  detects the artwork bounds, crops square, and re-rounds the corners with a
+  transparent mask → `Resources/AppIcon-1024.png`. Built `Resources/AppIcon.icns`
+  via `sips` + `iconutil`. `build_app.sh` copies the icns into the bundle and
+  `Info.plist` sets `CFBundleIconFile`.
+- Installed the release build to `/Applications/ClipboardX.app` (ad-hoc signed),
+  refreshed the icon cache. Menu-bar glyph stays the monochrome SF Symbol template.
+
+### Files Changed
+
+- `Resources/Info.plist`, `build_app.sh`, `.gitignore`,
+  `Resources/icon.png`, `Resources/AppIcon-1024.png`, `Resources/AppIcon.icns`,
+  `scripts/make_icon.swift`
+
+### Current Status
+
+- v0.2 installed in /Applications with an icon and running.
+
+### Note
+
+- Moving the app to /Applications changes its path, so Accessibility permission
+  must be re-granted for the installed copy.
+
 ## 2026-06-13 (fix: Shift+Return plain paste — take 2, local event monitor)
 
 ### Done

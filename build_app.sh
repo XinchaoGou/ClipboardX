@@ -20,6 +20,11 @@ mkdir -p "${APP_DIR}/Contents/Resources"
 cp "${BUILD_DIR}/${APP_NAME}" "${APP_DIR}/Contents/MacOS/${APP_NAME}"
 cp "Resources/Info.plist" "${APP_DIR}/Contents/Info.plist"
 
+# App icon (optional but expected for a real install).
+if [ -f "Resources/AppIcon.icns" ]; then
+  cp "Resources/AppIcon.icns" "${APP_DIR}/Contents/Resources/AppIcon.icns"
+fi
+
 # Ad-hoc code signature so Accessibility permission sticks across launches.
 echo "==> Code signing (ad-hoc)…"
 codesign --force --deep --sign - \
