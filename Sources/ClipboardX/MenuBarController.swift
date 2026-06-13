@@ -44,9 +44,9 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             menu.addItem(.separator())
         }
 
-        // Recent section
+        // Recent section (history excludes pinned; independent of the panel's view)
         menu.addItem(sectionHeader("Recent"))
-        let recent = app.items.filter { !$0.isPinned }.prefix(15)
+        let recent = ((try? app.store.recentItems()) ?? []).prefix(15)
         if recent.isEmpty {
             let empty = NSMenuItem(title: "No history yet", action: nil, keyEquivalent: "")
             empty.isEnabled = false

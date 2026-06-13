@@ -267,3 +267,30 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 ### Risks
 
 - None.
+
+## 2026-06-13 (change: pinned items hidden from History)
+
+### Done
+
+- Per request, pinned items no longer appear in the History view. `recentItems`
+  and `search` now filter `is_pinned = 0` (board members still show in History).
+  The menu bar "Recent" section uses `store.recentItems()` directly so it is
+  independent of the panel's current sidebar selection.
+- Verified against the live DB: a pinned item shows only in Pinned, not History.
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardStore.swift`, `MenuBarController.swift`,
+  `docs/ARCHITECTURE.md`
+
+### Current Status
+
+- Builds, packages, relaunched. History = non-pinned; Pinned = pinned only.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- None.

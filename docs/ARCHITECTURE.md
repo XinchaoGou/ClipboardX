@@ -88,8 +88,9 @@ There is a single `items` table. An item is a "favorite" — and therefore exemp
 from auto-cleanup and from "clear history (keep favorites)" — when it is
 **pinned** (`is_pinned = 1`) OR it belongs to **at least one board** (a row in
 `item_groups`). Boards are the user's named collections (the `groups` table).
-Favoriting an item does not remove it from History; History, Pinned and each
-board are filtered views over the same rows (`AppState.SidebarSelection`).
+History, Pinned and each board are filtered views over the same rows
+(`AppState.SidebarSelection`). **Pinned items are excluded from the History view**
+(they live only in Pinned); board members still appear in History.
 
 ## Data model
 

@@ -147,12 +147,13 @@ final class ClipboardStore {
 
     // MARK: - Queries
 
-    /// Recent non-pinned + pinned items, pinned first, newest first.
+    /// Recent history items, newest first. Pinned items are excluded — they live
+    /// only in the Pinned view (collections members still appear here).
     func recentItems(limit: Int = 200) throws -> [ClipboardItem] {
         try db.query("""
             SELECT \(itemColumns) FROM items
-            WHERE deleted_at IS NULL
-            ORDER BY is_pinned DESC, updated_at DESC
+            WHERE deleted_at IS NULL AND is_pinned = 0
+            ORDER BY updated_at DESC
             LIMIT ?
             """, [limit.sql], map: mapItem)
     }
@@ -175,13 +176,13 @@ final class ClipboardStore {
             FROM items i
             LEFT JOIN item_groups ig ON ig.item_id = i.id
             LEFT JOIN groups g ON g.id = ig.group_id
-            WHERE i.deleted_at IS NULL AND (
+            WHERE i.deleted_at IS NULL AND i.is_pinned = 0 AND (
                 i.content_text LIKE ? OR
                 i.file_paths_json LIKE ? OR
                 i.source_app_name LIKE ? OR
                 g.name LIKE ?
             )
-            ORDER BY i.is_pinned DESC, i.updated_at DESC
+            ORDER BY i.updated_at DESC
             LIMIT ?
             """, [like.sql, like.sql, like.sql, like.sql, limit.sql], map: mapItem)
     }
