@@ -295,6 +295,31 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - None.
 
+## 2026-06-13 (change: single pin toggle button)
+
+### Done
+
+- Replaced the separate pin / unpin (`pin` vs `pin.slash`) icons with one toggle
+  button whose state is shown by colour/fill: orange `pin.fill` when pinned, grey
+  `pin` when not. The standalone status pin is hidden while the row is active to
+  avoid showing two pins on hover.
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardPanelView.swift`
+
+### Current Status
+
+- Builds, packages, relaunched.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- None.
+
 ## 2026-06-13 (change: always select top item when entering a section)
 
 ### Done

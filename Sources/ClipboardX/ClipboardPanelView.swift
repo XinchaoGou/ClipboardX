@@ -293,7 +293,7 @@ struct ClipboardRowView: View {
                 Text("⌘\(index + 1)").font(.system(size: 10, design: .monospaced))
                     .foregroundStyle(.tertiary)
             }
-            if item.isPinned {
+            if item.isPinned && !active {
                 Image(systemName: "pin.fill").font(.system(size: 10)).foregroundStyle(.orange)
             }
             if active {
@@ -339,7 +339,13 @@ struct ClipboardRowView: View {
                 iconButton("arrow.down") { app.moveItemInBoard(item, up: false) }
             }
             iconButton("doc.on.clipboard") { app.copyItem(item) }
-            iconButton(item.isPinned ? "pin.slash" : "pin") { app.togglePin(item) }
+            // Single pin toggle; colour/fill conveys the pinned state.
+            Button { app.togglePin(item) } label: {
+                Image(systemName: item.isPinned ? "pin.fill" : "pin").font(.system(size: 12))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(item.isPinned ? Color.orange : Color.secondary)
+            .help(item.isPinned ? "Unpin" : "Pin")
             if item.type == .text || item.type == .url {
                 iconButton("pencil") { onEdit() }
             }
