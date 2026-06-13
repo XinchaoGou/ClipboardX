@@ -295,18 +295,18 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - None.
 
-## 2026-06-13 (fix: Shift+Return plain paste not firing)
+## 2026-06-13 (fix: Shift+Return plain paste — take 2, local event monitor)
 
 ### Done
 
-- The SwiftUI `keyboardShortcut(.return, modifiers: .shift)` button never fired:
-  unlike Cmd-modified keys, Shift+Return is consumed by the focused search field's
-  field editor (insertLineBreak) before reaching the key-equivalent path.
-- Moved the panel selection (`selectedID`) into `AppState` and added
-  `pasteSelected(plainText:)`. `FloatingPanel` now overrides `performKeyEquivalent`
-  (called before the field's keyDown); `PanelController` intercepts Shift+Return
-  (keyCode 36, shift-only) and pastes the selection as plain text. Removed the
-  non-working SwiftUI shortcut button (Cmd+Delete button kept).
+- First attempt (SwiftUI `keyboardShortcut`, then `performKeyEquivalent`) didn't
+  work: Shift+Return was still treated as submit (formatted paste). `performKey-
+  Equivalent` isn't reliably invoked for shift-only Return.
+- Moved panel selection (`selectedID`) into `AppState` with `pasteSelected(plain:)`.
+  `PanelController` now installs an `NSEvent.addLocalMonitorForEvents(.keyDown)`
+  that, while the panel is the key window, consumes Shift+Return (keyCode 36,
+  shift-only) and pastes the selection as plain text — intercepting it before the
+  field editor can submit. Cmd+Delete button kept.
 
 ### Files Changed
 
@@ -315,7 +315,8 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 ### Current Status
 
-- Builds, packages, relaunched. Return = formatted, Shift+Return = plain.
+- Builds, packages, relaunched. Return = formatted, Shift+Return = plain
+  (via local key monitor).
 
 ### Next
 
@@ -323,7 +324,7 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 ### Risks
 
-- None.
+- The local monitor only acts while our panel is key; other windows unaffected.
 
 ## 2026-06-13 (feature: formatted paste — Return vs Shift+Return)
 

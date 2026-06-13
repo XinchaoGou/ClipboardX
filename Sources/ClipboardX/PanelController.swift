@@ -5,15 +5,6 @@ import SwiftUI
 final class FloatingPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
-
-    /// Return true to consume the event. Called before the focused field's keyDown,
-    /// so it can intercept keys (e.g. Shift+Return) the search field would swallow.
-    var onKeyEquivalent: ((NSEvent) -> Bool)?
-
-    override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        if onKeyEquivalent?(event) == true { return true }
-        return super.performKeyEquivalent(with: event)
-    }
 }
 
 /// Owns the clipboard panel window and toggles its visibility.
@@ -24,9 +15,27 @@ final class PanelController {
     private let app: AppState
     private var panel: FloatingPanel?
     private var previousApp: NSRunningApplication?
+    private var keyMonitor: Any?
 
     init(app: AppState) {
         self.app = app
+        installKeyMonitor()
+    }
+
+    /// Intercept keys that the focused search field would otherwise swallow,
+    /// before they reach any responder. Currently: Shift+Return → plain paste.
+    private func installKeyMonitor() {
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, let panel = self.panel, panel.isVisible, panel.isKeyWindow else {
+                return event
+            }
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            if event.keyCode == 36, flags == .shift {   // 36 = Return
+                self.app.pasteSelected(plainText: true)
+                return nil   // consume so the field doesn't submit (formatted paste)
+            }
+            return event
+        }
     }
 
     func toggle() {
@@ -87,17 +96,6 @@ final class PanelController {
         panel.hidesOnDeactivate = false
         panel.contentView = hosting
         panel.delegate = PanelDelegate.shared
-        // Shift+Return → paste the selection as plain text. Handled here because the
-        // focused search field would otherwise consume it.
-        panel.onKeyEquivalent = { [weak self] event in
-            guard let self else { return false }
-            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            if event.keyCode == 36, flags == .shift {   // 36 = Return
-                self.app.pasteSelected(plainText: true)
-                return true
-            }
-            return false
-        }
         return panel
     }
 }
