@@ -127,3 +127,35 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - Index-based `selection` still points to a position; after a reorder it may land
   on a neighbouring item. Cosmetic only; can switch selection to track item id later.
+
+## 2026-06-13 (bugfix: panel hover/selection)
+
+### Done
+
+- Reworked the panel's selection/hover model. Previously hover lived in each
+  row's `@State` (unreliable under `LazyVStack` view reuse — some rows wouldn't
+  highlight, one stayed stuck selected) and selection was an index.
+- Now both selection and hover are tracked in the parent by stable item id
+  (`selectedID` / `hoveredID`); keyboard nav derives the index from the id.
+- Made the whole row hit-testable with `frame(maxWidth:.infinity)` +
+  `contentShape`, so hovering/clicking the empty area of a row works (previously
+  only the text/icons responded). Tap-to-paste and onHover moved into the row.
+- Cleared all local history (DB + images/thumbs/icons) at the user's request for
+  a clean re-test.
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardPanelView.swift`
+
+### Current Status
+
+- Builds, packages, relaunched with an empty history. Hover highlights every row
+  consistently; selection follows the item across reloads/reorders.
+
+### Next
+
+- Resume Backlog: custom hotkey recording UI (pending user confirmation).
+
+### Risks
+
+- None known for selection/hover after this change.

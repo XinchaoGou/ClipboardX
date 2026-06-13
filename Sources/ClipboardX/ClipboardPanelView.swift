@@ -4,9 +4,17 @@ import AppKit
 /// The Spotlight-like floating panel: search field on top, history list below.
 struct ClipboardPanelView: View {
     @ObservedObject var app: AppState
-    @State private var selection: Int = 0
+    // Selection and hover are tracked by stable item id (not list position) so
+    // they stay attached to the right row when the list reorders or reloads.
+    @State private var selectedID: Int64?
+    @State private var hoveredID: Int64?
     @State private var editingItem: ClipboardItem?
     @FocusState private var searchFocused: Bool
+
+    private var selectedIndex: Int {
+        guard let id = selectedID else { return 0 }
+        return app.items.firstIndex { $0.id == id } ?? 0
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,10 +32,13 @@ struct ClipboardPanelView: View {
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.08)))
         .onAppear {
             searchFocused = true
-            selection = 0
+            selectedID = app.items.first?.id
         }
-        .onChange(of: app.items.count) { _, _ in
-            if selection >= app.items.count { selection = max(0, app.items.count - 1) }
+        .onChange(of: app.items) { _, items in
+            // Keep selection valid when the list reloads/reorders.
+            if selectedID == nil || !items.contains(where: { $0.id == selectedID }) {
+                selectedID = items.first?.id
+            }
         }
         .onKeyPress(phases: .down) { press in handleKey(press) }
         .sheet(item: $editingItem) { item in
@@ -89,24 +100,25 @@ struct ClipboardPanelView: View {
                         ClipboardRowView(
                             item: item,
                             index: index,
-                            selected: index == selection,
+                            selected: item.id == selectedID,
+                            hovered: item.id == hoveredID,
                             app: app,
-                            onActivate: { selection = index; pasteSelected() },
+                            onActivate: { selectedID = item.id; pasteSelected() },
+                            onHoverChange: { isHovering in
+                                if isHovering { hoveredID = item.id }
+                                else if hoveredID == item.id { hoveredID = nil }
+                            },
                             onEdit: { editingItem = item }
                         )
-                        .onTapGesture { selection = index; pasteSelected() }
                     }
                 }
                 .padding(8)
             }
             // Scroll by the row's stable element id (matches the ForEach identity).
-            // Do NOT add an extra `.id(index)` to rows — a positional identity that
-            // conflicts with the element identity causes ghost/duplicate rows when
-            // the list reorders (e.g. after pinning).
-            .onChange(of: selection) { _, new in
-                guard new < app.items.count else { return }
+            .onChange(of: selectedID) { _, id in
+                guard let id else { return }
                 withAnimation(.easeOut(duration: 0.1)) {
-                    proxy.scrollTo(app.items[new].id, anchor: .center)
+                    proxy.scrollTo(id, anchor: .center)
                 }
             }
         }
@@ -120,17 +132,22 @@ struct ClipboardPanelView: View {
            let n = Int(press.characters), n >= 1, n <= 9 {
             let idx = n - 1
             if idx < app.items.count {
-                selection = idx
-                pasteSelected()
+                app.pasteItem(app.items[idx])
             }
             return .handled
         }
         switch press.key {
         case .downArrow:
-            if !app.items.isEmpty { selection = min(selection + 1, app.items.count - 1) }
+            if !app.items.isEmpty {
+                let next = min(selectedIndex + 1, app.items.count - 1)
+                selectedID = app.items[next].id
+            }
             return .handled
         case .upArrow:
-            if !app.items.isEmpty { selection = max(selection - 1, 0) }
+            if !app.items.isEmpty {
+                let prev = max(selectedIndex - 1, 0)
+                selectedID = app.items[prev].id
+            }
             return .handled
         case .escape:
             PanelController.shared?.hide()
@@ -144,8 +161,8 @@ struct ClipboardPanelView: View {
     }
 
     private func pasteSelected() {
-        guard selection < app.items.count else { return }
-        app.pasteItem(app.items[selection])
+        guard selectedIndex < app.items.count, !app.items.isEmpty else { return }
+        app.pasteItem(app.items[selectedIndex])
     }
 }
 
@@ -154,10 +171,13 @@ struct ClipboardRowView: View {
     let item: ClipboardItem
     let index: Int
     let selected: Bool
+    let hovered: Bool
     @ObservedObject var app: AppState
     let onActivate: () -> Void
+    let onHoverChange: (Bool) -> Void
     let onEdit: () -> Void
-    @State private var hovering = false
+
+    private var active: Bool { selected || hovered }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -191,14 +211,18 @@ struct ClipboardRowView: View {
             if item.isPinned {
                 Image(systemName: "pin.fill").font(.system(size: 10)).foregroundStyle(.orange)
             }
-            if hovering || selected {
+            if active {
                 rowActions
             }
         }
         .padding(.horizontal, 10).padding(.vertical, 7)
-        .background(selected ? Color.accentColor.opacity(0.20) : (hovering ? Color.secondary.opacity(0.08) : Color.clear))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(selected ? Color.accentColor.opacity(0.20) : (hovered ? Color.secondary.opacity(0.08) : Color.clear))
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .onHover { hovering = $0 }
+        // Make the whole row (including empty space) hoverable/clickable.
+        .contentShape(RoundedRectangle(cornerRadius: 8))
+        .onHover { onHoverChange($0) }
+        .onTapGesture { onActivate() }
         .contextMenu { contextMenu }
     }
 
