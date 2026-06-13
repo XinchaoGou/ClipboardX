@@ -77,7 +77,7 @@ Storage       ClipboardStore  →  SQLite (thin wrapper)  +  on-disk files (Stor
 | `MenuBarController.swift` | `NSStatusItem` dropdown menu |
 | `PanelController.swift` | Floating `NSPanel` host + show/hide/focus handling |
 | `ClipboardPanelView.swift` | SwiftUI search panel, list rows, edit sheet |
-| `HotkeyManager.swift` | Global hotkeys via Carbon `RegisterEventHotKey` (toggle panel, plain-text paste, `Ctrl+Cmd+0` Pinned, `Ctrl+Cmd+1…9` boards) |
+| `HotkeyManager.swift` | Global hotkeys via Carbon `RegisterEventHotKey` (toggle panel `Shift+Cmd+V`, plain-text paste `Ctrl+Cmd+V`) |
 | `PasteExecutor.swift` | Pasteboard write-back + simulated Cmd+V + restore |
 | `SettingsStore.swift` | `UserDefaults`-backed preferences |
 | `SettingsView.swift` | SwiftUI settings + settings window controller |

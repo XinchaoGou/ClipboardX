@@ -70,8 +70,8 @@ struct ClipboardPanelView: View {
 
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 2) {
-            sidebarRow(title: "History", systemImage: "clock", selection: .history, hint: "⇧⌘V")
-            sidebarRow(title: "Pinned", systemImage: "pin", selection: .pinned, hint: "⌃⌘0")
+            sidebarRow(title: "History", systemImage: "clock", selection: .history)
+            sidebarRow(title: "Pinned", systemImage: "pin", selection: .pinned)
 
             if !app.groups.isEmpty {
                 Text("COLLECTIONS")
@@ -80,10 +80,8 @@ struct ClipboardPanelView: View {
                     .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 2)
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 2) {
-                        ForEach(Array(app.groups.enumerated()), id: \.element.id) { index, g in
-                            sidebarRow(title: g.name, systemImage: "folder",
-                                       selection: .group(g.id),
-                                       hint: index < 9 ? "⌃⌘\(index + 1)" : nil)
+                        ForEach(app.groups) { g in
+                            sidebarRow(title: g.name, systemImage: "folder", selection: .group(g.id))
                         }
                     }
                 }
@@ -94,6 +92,10 @@ struct ClipboardPanelView: View {
                     .padding(.horizontal, 12).padding(.top, 12)
             }
             Spacer()
+            Text("⇧⌘↑/↓ switch")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(.tertiary)
+                .padding(.horizontal, 12).padding(.bottom, 4)
         }
         .padding(.vertical, 10)
         .frame(width: 180)
@@ -185,7 +187,27 @@ struct ClipboardPanelView: View {
 
     // MARK: - Keyboard
 
+    /// Ordered sidebar sections: History, Pinned, then each collection.
+    private var sections: [AppState.SidebarSelection] {
+        [.history, .pinned] + app.groups.map { .group($0.id) }
+    }
+
+    private func switchSection(by delta: Int) {
+        let all = sections
+        let current = all.firstIndex(of: app.sidebarSelection) ?? 0
+        let next = min(max(current + delta, 0), all.count - 1)
+        app.sidebarSelection = all[next]
+    }
+
     private func handleKey(_ press: KeyPress) -> KeyPress.Result {
+        // Shift + Cmd + ↑/↓ → switch sidebar section (History / Pinned / collections)
+        if press.modifiers.contains(.command), press.modifiers.contains(.shift) {
+            switch press.key {
+            case .downArrow: switchSection(by: 1); return .handled
+            case .upArrow: switchSection(by: -1); return .handled
+            default: break
+            }
+        }
         // Cmd + 1...9 → quick paste
         if press.modifiers.contains(.command),
            let n = Int(press.characters), n >= 1, n <= 9 {

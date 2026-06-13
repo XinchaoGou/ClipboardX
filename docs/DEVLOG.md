@@ -239,3 +239,31 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 - Board global hotkeys are auto-assigned by board order (first 9); remapping waits
   for the custom-hotkey UI. `Ctrl+Cmd+1…9` could in theory clash with a user's own
   global shortcuts.
+
+## 2026-06-13 (change: in-panel section switch instead of global board hotkeys)
+
+### Done
+
+- Per user request, removed the global `Ctrl+Cmd+0` / `Ctrl+Cmd+1…9` hotkeys for
+  Pinned/boards (no longer want global bindings for these).
+- Added in-panel `Shift+Cmd+↑/↓` to cycle the sidebar selection through
+  History → Pinned → each collection. Sidebar shows a "⇧⌘↑/↓ switch" hint and the
+  per-row `Ctrl+Cmd` hints were removed.
+
+### Files Changed
+
+- `Sources/ClipboardX/AppDelegate.swift` (dropped board hotkey registration),
+  `ClipboardPanelView.swift` (section switching + hints), `docs/ARCHITECTURE.md`
+
+### Current Status
+
+- Builds, packages, relaunched. Global hotkeys are now just `Shift+Cmd+V` (panel)
+  and `Ctrl+Cmd+V` (plain-text paste).
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- None.

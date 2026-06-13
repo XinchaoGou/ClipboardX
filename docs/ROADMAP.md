@@ -39,6 +39,7 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
   between History / Pinned / each board; "clear history" keeps favorites. Board
   create/delete lives in Settings.
 - Boards/favorites Phase 2: per-board manual ordering (`item_groups.sort_order`,
-  move up/down buttons + context menu); Collections submenu in the menu bar;
-  global hotkeys `Ctrl+Cmd+0` (Pinned) and `Ctrl+Cmd+1…9` (first 9 boards) that
-  open the panel pre-filtered; hotkey hints shown in the sidebar.
+  move up/down buttons + context menu); Collections submenu in the menu bar.
+  Section switching inside the panel via `Shift+Cmd+↑/↓` (History / Pinned /
+  collections). (Earlier global `Ctrl+Cmd+0/1…9` board hotkeys were removed by
+  request in favor of in-panel switching.)
