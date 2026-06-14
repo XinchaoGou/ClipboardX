@@ -5,18 +5,16 @@ import ServiceManagement
 struct SettingsView: View {
     @ObservedObject var settings: SettingsStore
     @ObservedObject var app: AppState
-    @State private var newExclude: String = ""
     @State private var newGroup: String = ""
     @State private var accessibilityGranted = PasteExecutor.hasAccessibilityPermission
 
     var body: some View {
         TabView {
             generalTab.tabItem { Label("General", systemImage: "gearshape") }
-            excludeTab.tabItem { Label("Excluded Apps", systemImage: "hand.raised") }
             groupsTab.tabItem { Label("Groups", systemImage: "folder") }
             permissionsTab.tabItem { Label("Permissions", systemImage: "lock.shield") }
         }
-        .frame(width: 480, height: 420)
+        .frame(width: 480, height: 400)
         .padding()
     }
 
@@ -33,7 +31,6 @@ struct SettingsView: View {
             }
             Section("Paste") {
                 Toggle("Restore previous clipboard after paste", isOn: $settings.restorePreviousClipboardAfterPaste)
-                Toggle("Enable paste as plain text (Ctrl+Cmd+V)", isOn: $settings.enablePlainTextPaste)
             }
             Section("Startup") {
                 Toggle("Launch at login", isOn: Binding(
@@ -49,29 +46,6 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-    }
-
-    private var excludeTab: some View {
-        VStack(alignment: .leading) {
-            Text("Clipboard changes from these apps are never recorded (bundle IDs).")
-                .font(.caption).foregroundStyle(.secondary)
-            List {
-                ForEach(settings.excludedBundleIDs, id: \.self) { id in
-                    HStack {
-                        Text(id)
-                        Spacer()
-                        Button { remove(id) } label: { Image(systemName: "minus.circle") }
-                            .buttonStyle(.plain).foregroundStyle(.red)
-                    }
-                }
-            }
-            HStack {
-                TextField("com.example.app", text: $newExclude)
-                    .textFieldStyle(.roundedBorder)
-                Button("Add") { addExclude() }
-                Button("Pick App…") { pickApp() }
-            }
-        }
     }
 
     private var groupsTab: some View {
@@ -122,30 +96,6 @@ struct SettingsView: View {
     }
 
     // MARK: - Actions
-
-    private func addExclude() {
-        let id = newExclude.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !id.isEmpty, !settings.excludedBundleIDs.contains(id) else { return }
-        settings.excludedBundleIDs.append(id)
-        newExclude = ""
-    }
-
-    private func remove(_ id: String) {
-        settings.excludedBundleIDs.removeAll { $0 == id }
-    }
-
-    private func pickApp() {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.application]
-        panel.directoryURL = URL(fileURLWithPath: "/Applications")
-        panel.allowsMultipleSelection = false
-        if panel.runModal() == .OK, let url = panel.url,
-           let bundle = Bundle(url: url), let id = bundle.bundleIdentifier {
-            if !settings.excludedBundleIDs.contains(id) {
-                settings.excludedBundleIDs.append(id)
-            }
-        }
-    }
 
     private func updateLaunchAtLogin(_ enabled: Bool) {
         do {

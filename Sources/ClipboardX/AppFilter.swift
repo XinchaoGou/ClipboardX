@@ -1,7 +1,7 @@
 import Foundation
 import AppKit
 
-/// Determines the frontmost application and whether recording should be skipped.
+/// Resolves the frontmost application for item metadata and icon caching.
 enum AppFilter {
     struct FrontApp {
         var name: String?
@@ -12,11 +12,6 @@ enum AppFilter {
     static func frontmostApp() -> FrontApp {
         let app = NSWorkspace.shared.frontmostApplication
         return FrontApp(name: app?.localizedName, bundleID: app?.bundleIdentifier, app: app)
-    }
-
-    static func shouldSkip(bundleID: String?, excluded: [String]) -> Bool {
-        guard let bundleID = bundleID else { return false }
-        return excluded.contains(bundleID)
     }
 
     /// Cache a source app icon to disk so list views don't need the running app.

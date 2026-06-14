@@ -12,24 +12,18 @@ final class HotkeyManager {
 
     enum Action: UInt32 {
         case togglePanel = 1
-        case pastePlainText = 2
     }
 
     private var handlers: [UInt32: () -> Void] = [:]
     private var hotKeyRefs: [EventHotKeyRef?] = []
     private var eventHandler: EventHandlerRef?
 
-    func registerDefaults(togglePanel: @escaping () -> Void,
-                          pastePlainText: @escaping () -> Void) {
+    func registerDefaults(togglePanel: @escaping () -> Void) {
         installEventHandlerIfNeeded()
-        // Shift + Cmd + V
+        // Shift + Cmd + V — toggle history panel
         register(keyCode: UInt32(kVK_ANSI_V),
                  modifiers: UInt32(cmdKey | shiftKey),
                  action: .togglePanel, handler: togglePanel)
-        // Ctrl + Cmd + V
-        register(keyCode: UInt32(kVK_ANSI_V),
-                 modifiers: UInt32(cmdKey | controlKey),
-                 action: .pastePlainText, handler: pastePlainText)
     }
 
     func register(keyCode: UInt32, modifiers: UInt32, action: Action, handler: @escaping () -> Void) {

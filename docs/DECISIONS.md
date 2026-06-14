@@ -56,22 +56,8 @@ regardless of which app is focused, without requiring an event tap.
 
 ## 008
 
-Decision: Skip recording when the pasteboard carries `org.nspasteboard.ConcealedType`
-(and friends), in addition to a bundle-id blocklist.
-
-Reason: Password managers mark secret copies as concealed/transient; honoring this
-convention prevents capturing secrets even from apps not on the blocklist.
-
-## 011
-
-Decision: Support formatted paste by capturing the source RTF on copy and storing
-it as a file (`rtf/<hash>.rtf`, path in `items.rtf_path`), rather than storing
-attributed strings in the DB or doing full rich-text editing.
-
-Reason: Users want Return = paste with formatting, Shift+Return = plain. Keeping
-the RTF as a file matches the existing "DB stores paths, binaries on disk" pattern
-and avoids adding BLOB support to the SQLite wrapper. We only pass formatting
-through (no rich-text editor); editing a text item drops its RTF.
+**Status: superseded by 012 (2026-06-14).** We previously skipped recording for
+concealed/transient pasteboard types and a password-manager bundle-id blocklist.
 
 ## 009
 
@@ -90,3 +76,22 @@ differ only by a trailing newline or space. Hashing the raw text left these as
 separate rows, yet the trimmed preview made them look identical — appearing as a
 "duplicate" bug. Hashing the trimmed text collapses these visual duplicates into
 one entry; keeping the raw text preserves byte-exact paste fidelity.
+
+## 011
+
+Decision: Support formatted paste by capturing the source RTF on copy and storing
+it as a file (`rtf/<hash>.rtf`, path in `items.rtf_path`), rather than storing
+attributed strings in the DB or doing full rich-text editing.
+
+Reason: Users want Return = paste with formatting, Shift+Return = plain. Keeping
+the RTF as a file matches the existing "DB stores paths, binaries on disk" pattern
+and avoids adding BLOB support to the SQLite wrapper. We only pass formatting
+through (no rich-text editor); editing a text item drops its RTF.
+
+## 012
+
+Decision: Record all clipboard changes regardless of source app or pasteboard
+concealed/transient markers (no exclusion list, no concealed-type skip).
+
+Reason: Product direction — the user chose not to maintain privacy filtering in
+the capture path.

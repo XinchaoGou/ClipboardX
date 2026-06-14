@@ -4,8 +4,8 @@ Project progress. Agents update this after every task.
 
 ## Backlog
 
-- Custom hotkey recording UI (let users rebind `Shift+Cmd+V`, `Ctrl+Cmd+V`,
-  quick-paste, and the per-board/Pinned hotkeys currently auto-assigned).
+- Custom hotkey recording UI (let users rebind `Shift+Cmd+V`, quick-paste, and
+  other shortcuts as needed).
 - Drag-to-reorder within a board (currently move up/down buttons).
 - Verify / harden Launch at Login from the signed `.app` bundle.
 - Import / export history.
@@ -25,13 +25,17 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
 
 - Formatted paste: capture RTF on copy (`rtf/`, `items.rtf_path`); Return pastes
   with formatting, Shift+Return pastes plain text; editing clears RTF.
+- Removed excluded-apps settings, default password-manager bundle blocklist, and
+  concealed/transient pasteboard skipping; all supported clipboard changes are recorded.
+- Removed global `Ctrl+Cmd+V` “paste clipboard as plain text” hotkey and the
+  `enablePlainTextPaste` setting; plain vs formatted paste is only via the panel
+  (Return / Shift+Return).
 
 ## Done
 
 - v0.1 core loop: pasteboard monitoring → SQLite storage → menu bar → hotkey panel
   → search → select-to-paste → delete.
-- v0.2: pin, groups, edit text items, paste-as-plain-text, sensitive-app exclusion
-  (+ concealed-type detection).
+- v0.2: pin, groups, edit text items; panel Shift+Return for plain paste of a row.
 - v0.3 (partial): image support, file-path support, source-app icon capture.
 - SwiftPM project + `.app` packaging script (`build_app.sh`) with ad-hoc signing.
 - Dedup by content hash; max-count auto-cleanup that also deletes on-disk files.

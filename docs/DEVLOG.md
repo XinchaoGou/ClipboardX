@@ -487,3 +487,94 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 ### Risks
 
 - None.
+
+## 2026-06-14
+
+### Done
+
+- Removed privacy filtering from capture: no `excludedBundleIDs` in settings, no
+  Settings "Excluded Apps" tab, no skip for concealed/transient/auto-generated
+  pasteboard types, no `AppFilter.shouldSkip`. `PasteboardMonitor` always records
+  parseable changes (still ignores self-writes from `PasteExecutor`).
+
+### Files Changed
+
+- `Sources/ClipboardX/AppFilter.swift`, `PasteboardMonitor.swift`, `SettingsStore.swift`,
+  `SettingsView.swift`
+- `AGENTS.md`, `README.md`, `docs/PRODUCT.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`,
+  `docs/DECISIONS.md`
+
+### Current Status
+
+- `swift build` + `./build_app.sh release` succeed.
+- Smoke test: launched `build/ClipboardX.app`, `pbcopy` a unique line, confirmed new
+  row in `~/Library/Application Support/ClipboardX/clipboard.db` within ~1s.
+- Static check: no `Excluded` / `excludedBundle` / `shouldSkip` / `isConcealed` in
+  `Sources/**/*.swift`.
+- Settings UI not screenshot-verified here: `osascript` + System Events needs
+  assistive access for this environment (blocked with -25211); please open
+  Settings and confirm only General / Groups / Permissions tabs.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- Users who relied on exclusions will now have passwords/secrets in history if they
+  copy from password managers; product choice to record everything.
+
+## 2026-06-14 (settings copy: plain paste vs ^⌘V)
+
+### Done
+
+- Clarified that **^⌘V** is a global shortcut (current clipboard → plain paste) and
+  is the only behavior gated by `enablePlainTextPaste`. **Shift+Return** in the
+  panel pastes the **selected history row** as plain text and is always available;
+  it is not controlled by that toggle. Updated `SettingsView` labels/caption and
+  README panel bullet.
+
+### Files Changed
+
+- `Sources/ClipboardX/SettingsView.swift`, `README.md`, `docs/ROADMAP.md`,
+  `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- None.
+
+## 2026-06-14 (remove global ^⌘V plain paste)
+
+### Done
+
+- Removed the global `Ctrl+Cmd+V` hotkey, `pastePlainTextFromClipboard()`, and
+  `SettingsStore.enablePlainTextPaste` / settings UI. Plain vs formatted paste is
+  only in the history panel: **Return** vs **Shift+Return** (`PanelController` local
+  monitor + existing `PasteExecutor` path).
+
+### Files Changed
+
+- `Sources/ClipboardX/HotkeyManager.swift`, `AppDelegate.swift`, `SettingsStore.swift`,
+  `SettingsView.swift`
+- `README.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- Users who relied on ^⌘V to strip formatting from the live clipboard without opening
+  the panel lose that shortcut; use the panel or copy plain text from source instead.

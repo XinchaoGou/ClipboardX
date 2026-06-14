@@ -25,7 +25,6 @@ manager. Not teams, not multi-device users.
 - Search history; press Enter to paste the selected item into the front app.
 - Quick-paste the Nth item, pin frequently used items, organize into groups.
 - Edit text items.
-- Exclude sensitive apps (password managers) from recording.
 - Keep the newest N items (default 1000); auto-clean older non-pinned items.
 - All data stored locally under `~/Library/Application Support/ClipboardX/`.
 
@@ -51,7 +50,6 @@ manager. Not teams, not multi-device users.
 - Search responds in well under 100ms.
 - 1000 items remain responsive.
 - History survives app restart.
-- Never records 1Password / Keychain / Apple Passwords content.
 - No Dock icon; menu-bar only.
 - Resident memory comfortably under 100MB.
 - Image/file binaries live on disk, not in the database; deleting an item removes

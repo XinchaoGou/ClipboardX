@@ -26,8 +26,6 @@ multi-device sync, no accounts, no subscriptions. All data stays on the user's M
 - **No third-party runtime dependencies.** Storage uses the system `sqlite3` via a
   thin in-repo wrapper. UI is SwiftUI + AppKit.
 - Images and files are stored on disk; the database stores **paths only**, never blobs.
-- Privacy first: never record from excluded apps (password managers) or pasteboards
-  marked `org.nspasteboard.ConcealedType`.
 
 ## Code Conventions
 

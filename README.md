@@ -22,15 +22,13 @@ your Mac in `~/Library/Application Support/ClipboardX/`.
   identical consecutive content is de-duplicated.
 - **Global hotkeys**
   - `Shift + Cmd + V` — toggle the search panel
-  - `Ctrl + Cmd + V` — paste current clipboard as plain text
   - `Cmd + 1…9` (inside the panel) — quick-paste the Nth item
-- **Spotlight-style panel** — live search, ↑/↓ navigation, `Enter` to paste,
-  `Esc` to close.
+- **Spotlight-style panel** — live search, ↑/↓ navigation, `Enter` to paste
+  (with formatting when available), `Shift+Return` for plain-text paste of the
+  selected row, `Esc` to close.
 - **One-click paste** — writes the item back and simulates `Cmd + V`; optionally
   restores your previous clipboard afterwards.
 - **Pin** frequently used items, organize into **groups**, **edit** text items.
-- **Excluded apps** — never records from password managers by default (1Password,
-  Bitwarden, Keychain Access, Apple Passwords) and honors concealed pasteboards.
 - **Auto cleanup** — keeps the newest N items (default 1000); deleting an item also
   removes its on-disk image/thumbnail files.
 

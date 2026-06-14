@@ -18,9 +18,9 @@ NSPasteboard.general
         │  (poll changeCount every ~0.4s)
         ▼
 PasteboardMonitor
-        │  frontmost app + concealed-type check
+        │  frontmost app (metadata)
         ▼
-AppFilter ──(excluded bundle id / concealed)──▶ skip
+AppFilter   (resolve front app + cache source icon)
         │
         ▼
 ClipboardItemParser   (classify text/url/image/file,
@@ -68,7 +68,7 @@ Storage       ClipboardStore  →  SQLite (thin wrapper)  +  on-disk files (Stor
 | `AppState.swift` | `@MainActor` coordinator/view model shared by all UI |
 | `PasteboardMonitor.swift` | Polls `changeCount`, filters, stores; ignores self-writes |
 | `ClipboardItemParser.swift` | Classifies content, persists images/thumbnails |
-| `AppFilter.swift` | Frontmost app, exclusion check, source-app icon caching |
+| `AppFilter.swift` | Frontmost app for metadata, source-app icon caching |
 | `ClipboardStore.swift` | Schema, CRUD, search, pin, groups, max-count cleanup |
 | `SQLite.swift` | Throwing wrapper over the SQLite3 C API |
 | `Models.swift` | `ClipboardItem`, `Group`, `ItemType` |
@@ -77,7 +77,7 @@ Storage       ClipboardStore  →  SQLite (thin wrapper)  +  on-disk files (Stor
 | `MenuBarController.swift` | `NSStatusItem` dropdown menu |
 | `PanelController.swift` | Floating `NSPanel` host + show/hide/focus handling |
 | `ClipboardPanelView.swift` | SwiftUI search panel, list rows, edit sheet |
-| `HotkeyManager.swift` | Global hotkeys via Carbon `RegisterEventHotKey` (toggle panel `Shift+Cmd+V`, plain-text paste `Ctrl+Cmd+V`) |
+| `HotkeyManager.swift` | Global hotkeys via Carbon `RegisterEventHotKey` (toggle panel `Shift+Cmd+V`) |
 | `PasteExecutor.swift` | Pasteboard write-back + simulated Cmd+V + restore |
 | `SettingsStore.swift` | `UserDefaults`-backed preferences |
 | `SettingsView.swift` | SwiftUI settings + settings window controller |
