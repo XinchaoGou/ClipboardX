@@ -28,7 +28,8 @@ your Mac in `~/Library/Application Support/ClipboardX/`.
   selected row, `Esc` to close.
 - **One-click paste** — writes the item back and simulates `Cmd + V`; optionally
   restores your previous clipboard afterwards.
-- **Pin** frequently used items, organize into **groups**, **edit** text items.
+- **Pin** frequently used items, organize into **groups** (collections), **edit** text items.
+  Add an item to a collection from the panel: **right-click the row → Add to Collection** (create collections under **Settings → Groups**).
 - **Auto cleanup** — keeps the newest N items (default 1000); deleting an item also
   removes its on-disk image/thumbnail files.
 

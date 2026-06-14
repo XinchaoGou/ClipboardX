@@ -74,7 +74,7 @@ Storage       ClipboardStore  →  SQLite (thin wrapper)  +  on-disk files (Stor
 | `Models.swift` | `ClipboardItem`, `Group`, `ItemType` |
 | `Storage.swift` | On-disk path resolution + directory creation |
 | `Hashing.swift` | SHA-256 content hashing (dedup + file naming) |
-| `MenuBarController.swift` | `NSStatusItem` dropdown menu |
+| `MenuBarController.swift` | `NSStatusItem` menu: open panel, pinned, collections (boards), recent, settings |
 | `PanelController.swift` | Floating `NSPanel` host + show/hide/focus handling |
 | `ClipboardPanelView.swift` | SwiftUI search panel, list rows, edit sheet |
 | `HotkeyManager.swift` | Global hotkeys via Carbon `RegisterEventHotKey` (toggle panel `Shift+Cmd+V`) |

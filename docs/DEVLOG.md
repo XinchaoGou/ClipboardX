@@ -658,3 +658,31 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - Apple may change preference URL schemes on future macOS; keep an eye on Settings
   deep links if reports return.
+
+## 2026-06-14 (menu bar: collections order + add hint)
+
+### Done
+
+- Reordered status menu: **Collections** (board submenus) now appears **before**
+  **Recent**, so the ⌘1…9 quick-paste block stays the last content section above
+  Settings. Added a disabled tip row: add items via panel **right-click → Add to
+  Collection**.
+- README: note that collections are created in Settings → Groups and items are added
+  from the panel context menu.
+
+### Files Changed
+
+- `Sources/ClipboardX/MenuBarController.swift`, `README.md`, `docs/ARCHITECTURE.md`,
+  `docs/ROADMAP.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- None.

@@ -44,28 +44,9 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             menu.addItem(.separator())
         }
 
-        // Recent section (history excludes pinned; independent of the panel's view)
-        menu.addItem(sectionHeader("Recent"))
-        let recent = ((try? app.store.recentItems()) ?? []).prefix(15)
-        if recent.isEmpty {
-            let empty = NSMenuItem(title: "No history yet", action: nil, keyEquivalent: "")
-            empty.isEnabled = false
-            menu.addItem(empty)
-        } else {
-            for (i, item) in recent.enumerated() {
-                let mi = makeItem(item)
-                if i < 9 {
-                    mi.keyEquivalent = "\(i + 1)"
-                    mi.keyEquivalentModifierMask = [.command]
-                }
-                menu.addItem(mi)
-            }
-        }
-
-        // Collections (boards)
+        // Collections (boards) — before Recent so "Recent + ⌘1…9" stays the last content block above Settings.
         let boards = (try? app.store.groups()) ?? []
         if !boards.isEmpty {
-            menu.addItem(.separator())
             menu.addItem(sectionHeader("Collections"))
             for board in boards {
                 let submenu = NSMenu()
@@ -81,6 +62,33 @@ final class MenuBarController: NSObject, NSMenuDelegate {
                 boardItem.submenu = submenu
                 boardItem.image = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
                 menu.addItem(boardItem)
+            }
+            let tipText = "Tip: in the panel, right-click a row → Add to Collection"
+            let tip = NSMenuItem(title: tipText, action: nil, keyEquivalent: "")
+            tip.isEnabled = false
+            tip.attributedTitle = NSAttributedString(string: tipText, attributes: [
+                .font: NSFont.systemFont(ofSize: 10),
+                .foregroundColor: NSColor.tertiaryLabelColor
+            ])
+            menu.addItem(tip)
+            menu.addItem(.separator())
+        }
+
+        // Recent section (history excludes pinned; independent of the panel's view)
+        menu.addItem(sectionHeader("Recent"))
+        let recent = ((try? app.store.recentItems()) ?? []).prefix(15)
+        if recent.isEmpty {
+            let empty = NSMenuItem(title: "No history yet", action: nil, keyEquivalent: "")
+            empty.isEnabled = false
+            menu.addItem(empty)
+        } else {
+            for (i, item) in recent.enumerated() {
+                let mi = makeItem(item)
+                if i < 9 {
+                    mi.keyEquivalent = "\(i + 1)"
+                    mi.keyEquivalentModifierMask = [.command]
+                }
+                menu.addItem(mi)
             }
         }
 
