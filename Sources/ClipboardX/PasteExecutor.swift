@@ -22,6 +22,23 @@ final class PasteExecutor {
         _ = AXIsProcessTrustedWithOptions(options)
     }
 
+    /// Opens System Settings to Privacy & Security → Accessibility (so the user can
+    /// enable or review ClipboardX). The AX prompt alone does nothing once trusted.
+    static func openAccessibilityPrivacySettings() {
+        if #available(macOS 15.0, *) {
+            guard let modern = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity?Privacy_Accessibility") else { return }
+            NSWorkspace.shared.open(modern)
+            // Sequoia+ sometimes needs a second open to land on the Accessibility sub-pane.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                NSWorkspace.shared.open(modern)
+            }
+            return
+        }
+        if let legacy = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(legacy)
+        }
+    }
+
     /// Put an item on the pasteboard and paste it into the frontmost app.
     /// - Parameter plainText: force writing only plain text (strips formatting).
     func paste(_ item: ClipboardItem, plainText: Bool = false) {
@@ -75,6 +92,7 @@ final class PasteExecutor {
     private func simulateCommandV() {
         guard Self.hasAccessibilityPermission else {
             Self.requestAccessibilityPermission()
+            Self.openAccessibilityPrivacySettings()
             return
         }
         let src = CGEventSource(stateID: .combinedSessionState)

@@ -32,6 +32,7 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
   (Return / Shift+Return).
 - Settings: confirmation dialogs before clearing history (keep favorites / clear all).
 - `scripts/relaunch_app.sh` + AGENTS workflow: quit running ClipboardX, `./build_app.sh release`, open bundle after user-visible changes.
+- Fix: Settings "Request / Open System Settings" now opens the Accessibility privacy pane (AX prompt alone is a no-op when already trusted).
 
 ## Done
 

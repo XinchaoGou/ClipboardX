@@ -627,3 +627,34 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - `killall ClipboardX` stops every process with that name; avoid running two different
   builds under the same binary name simultaneously.
+
+## 2026-06-14 (fix: open Accessibility settings from Permissions)
+
+### Done
+
+- **Request / Open System Settings** now also calls `NSWorkspace` to open Privacy &
+  Security → Accessibility. `AXIsProcessTrustedWithOptions(prompt:)` does not open
+  Settings and often does nothing when access is already granted, which made the
+  button feel broken.
+- macOS 15+ uses `com.apple.settings.PrivacySecurity?Privacy_Accessibility` with a
+  delayed second `open` for flaky sub-pane navigation; macOS 14 uses the legacy
+  `com.apple.preference.security` URL.
+- When paste runs without AX trust, we now open the same settings pane after prompting.
+
+### Files Changed
+
+- `Sources/ClipboardX/PasteExecutor.swift`, `Sources/ClipboardX/SettingsView.swift`,
+  `docs/ROADMAP.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- Apple may change preference URL schemes on future macOS; keep an eye on Settings
+  deep links if reports return.

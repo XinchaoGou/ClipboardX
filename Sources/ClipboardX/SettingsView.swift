@@ -103,6 +103,7 @@ struct SettingsView: View {
                     .font(.caption).foregroundStyle(.secondary)
                 Button("Request / Open System Settings") {
                     PasteExecutor.requestAccessibilityPermission()
+                    PasteExecutor.openAccessibilityPrivacySettings()
                     accessibilityGranted = PasteExecutor.hasAccessibilityPermission
                 }
                 Button("Re-check") { accessibilityGranted = PasteExecutor.hasAccessibilityPermission }
