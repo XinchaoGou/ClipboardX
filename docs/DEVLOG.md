@@ -578,3 +578,52 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - Users who relied on ^⌘V to strip formatting from the live clipboard without opening
   the panel lose that shortcut; use the panel or copy plain text from source instead.
+
+## 2026-06-14 (settings: confirm before clear history)
+
+### Done
+
+- Added SwiftUI `confirmationDialog` for **Clear history (keep favorites)** and
+  **Clear all** so the user must confirm before `AppState.clearHistory` runs.
+
+### Files Changed
+
+- `Sources/ClipboardX/SettingsView.swift`, `docs/ROADMAP.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- None.
+
+## 2026-06-14 (agent workflow: relaunch script)
+
+### Done
+
+- Documented default post-feature verification: quit `ClipboardX`, `./build_app.sh
+  release`, `open build/ClipboardX.app` (see `AGENTS.md` **Relaunch after new work**).
+- Added `./scripts/relaunch_app.sh` and mentioned it in `README.md` Quick start.
+
+### Files Changed
+
+- `AGENTS.md`, `README.md`, `scripts/relaunch_app.sh`, `docs/ROADMAP.md`,
+  `docs/DEVLOG.md`
+
+### Current Status
+
+- Ran `./scripts/relaunch_app.sh` successfully in this environment.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- `killall ClipboardX` stops every process with that name; avoid running two different
+  builds under the same binary name simultaneously.

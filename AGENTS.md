@@ -50,7 +50,21 @@ swift build                 # debug build
 swift run                   # run raw executable (dev)
 ./build_app.sh release      # package signed ClipboardX.app into build/
 open "build/ClipboardX.app" # launch
+./scripts/relaunch_app.sh   # quit running app, release-build, open bundle (smoke test)
 ```
+
+## Relaunch after new work (agent + local)
+
+Whenever a **user-visible** change lands (UI, hotkeys, capture, packaging, etc.),
+the agent should **by default**:
+
+1. Quit any running instance: `killall ClipboardX` (ignore errors).
+2. Rebuild the app bundle: `./build_app.sh release` (must succeed).
+3. Launch the fresh build: `open "build/ClipboardX.app"`.
+
+Use `./scripts/relaunch_app.sh` to do all three in one step. For compile-only checks,
+`swift build` is still enough; use the relaunch flow when validating the menu-bar
+`.app` behavior.
 
 ## Test / Verify Commands
 
@@ -84,6 +98,7 @@ itself (not its progress) changes.
 1. Read the docs listed in **Read First**.
 2. Output a development plan and get confirmation.
 3. Implement.
-4. Build, verify, fix obvious issues.
+4. Build, verify, fix obvious issues — for GUI/menu-bar changes, follow **Relaunch
+   after new work** (or run `./scripts/relaunch_app.sh`) unless the user opts out.
 5. Update ROADMAP + DEVLOG (and ARCHITECTURE/DECISIONS if needed).
 6. Report: 本次完成内容 / 当前项目状态 / 下一步推荐任务.

@@ -39,6 +39,7 @@ Requires macOS 14+ and a Swift 5.9+ toolchain.
 ```bash
 ./build_app.sh release       # build + package a signed ClipboardX.app
 open "build/ClipboardX.app"  # launch (appears in the menu bar)
+./scripts/relaunch_app.sh    # quit old instance, rebuild, open (handy after changes)
 ```
 
 On first launch, grant **Accessibility** permission when prompted (System Settings

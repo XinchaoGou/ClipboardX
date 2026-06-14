@@ -30,6 +30,8 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
 - Removed global `Ctrl+Cmd+V` “paste clipboard as plain text” hotkey and the
   `enablePlainTextPaste` setting; plain vs formatted paste is only via the panel
   (Return / Shift+Return).
+- Settings: confirmation dialogs before clearing history (keep favorites / clear all).
+- `scripts/relaunch_app.sh` + AGENTS workflow: quit running ClipboardX, `./build_app.sh release`, open bundle after user-visible changes.
 
 ## Done
 

@@ -7,6 +7,8 @@ struct SettingsView: View {
     @ObservedObject var app: AppState
     @State private var newGroup: String = ""
     @State private var accessibilityGranted = PasteExecutor.hasAccessibilityPermission
+    @State private var confirmClearKeepFavorites = false
+    @State private var confirmClearAll = false
 
     var body: some View {
         TabView {
@@ -16,6 +18,26 @@ struct SettingsView: View {
         }
         .frame(width: 480, height: 400)
         .padding()
+        .confirmationDialog(
+            "Clear history?",
+            isPresented: $confirmClearKeepFavorites,
+            titleVisibility: .visible
+        ) {
+            Button("Clear", role: .destructive) { app.clearHistory(keepFavorites: true) }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Remove items that are not pinned and not in any collection. Pinned items and items in collections stay.")
+        }
+        .confirmationDialog(
+            "Clear everything?",
+            isPresented: $confirmClearAll,
+            titleVisibility: .visible
+        ) {
+            Button("Clear All", role: .destructive) { app.clearHistory(keepFavorites: false) }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Remove every saved item, including pinned items and items in collections. This cannot be undone.")
+        }
     }
 
     private var generalTab: some View {
@@ -25,8 +47,8 @@ struct SettingsView: View {
                     Text("Max history items: \(settings.maxHistoryCount)")
                 }
                 HStack {
-                    Button("Clear history (keep favorites)") { app.clearHistory(keepFavorites: true) }
-                    Button("Clear all", role: .destructive) { app.clearHistory(keepFavorites: false) }
+                    Button("Clear history (keep favorites)") { confirmClearKeepFavorites = true }
+                    Button("Clear all", role: .destructive) { confirmClearAll = true }
                 }
             }
             Section("Paste") {
