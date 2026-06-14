@@ -811,9 +811,9 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - Added **`MenuItemImagePolicy`**: one-time replacement of `NSMenuItem.image`’s getter
   so rows **without** an explicit leading image return **`nil`** (hides macOS 26+
-  injected symbols such as Settings gear). Rows we care about (**folder**, **source
-  app icon**, **image thumbnail**) call **`setExplicitMenuImage`** so the original
-  getter runs and icons still show.
+  injected symbols such as Settings gear). Rows we care about (**source app icon**,
+  **image thumbnail**) call **`setExplicitMenuImage`** so the original getter runs and
+  icons still show.
 - **`AppDelegate.applicationDidFinishLaunching`**: call **`installIfNeeded()`** before
   building the status menu.
 
@@ -836,3 +836,28 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 - The hook applies to **all** `NSMenuItem`s in the process; only items that pass
   through **`setExplicitMenuImage(..., image: non-nil)`** keep a visible leading image.
   If a future menu is built without that helper, its icons would be suppressed too.
+
+## 2026-06-14 (status menu: drop Collections, boards in panel only)
+
+### Done
+
+- Removed the **Collections** block (board submenus) from **`MenuBarController`**’s
+  status-item menu. **Pinned**, **Recent**, **Settings…**, and **Quit** unchanged.
+  Users open collections from the **floating panel** sidebar.
+
+### Files Changed
+
+- `Sources/ClipboardX/MenuBarController.swift`, `Sources/ClipboardX/MenuItemImagePolicy.swift`,
+  `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/DECISIONS.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- None.

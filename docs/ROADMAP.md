@@ -33,9 +33,9 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
 - Settings: confirmation dialogs before clearing history (keep favorites / clear all).
 - `scripts/relaunch_app.sh` + AGENTS workflow: quit running ClipboardX, `./build_app.sh release`, open bundle after user-visible changes.
 - Fix: Settings "Request / Open System Settings" now opens the Accessibility privacy pane (AX prompt alone is a no-op when already trusted).
-- Menu bar: Collections before Recent; section headers and non-icon rows no longer use a leading spacer (flush with Open); add-to-collection hint moved into the panel when a collection is selected.
+- Menu bar: no Collections subsection (boards stay in the panel sidebar only); section headers and non-icon rows align with Open; add-to-collection hint when a collection is selected in the panel.
 - Menu bar footer: **Settings…** is a plain `NSMenuItem` with **no** `keyEquivalent` (no menu shortcut, no gear); **Quit** keeps `⌘Q`. Both use `image = nil` and `indentationLevel = 0` like Open.
-- macOS 26+ automatic menu item images: `MenuItemImagePolicy` installs a guarded `NSMenuItem.image` hook at launch; status menu uses `setExplicitMenuImage` so only folder / app / thumbnail rows keep a leading image.
+- macOS 26+ automatic menu item images: `MenuItemImagePolicy` installs a guarded `NSMenuItem.image` hook at launch; status menu uses `setExplicitMenuImage` for pinned/recent rows that show app or thumbnail icons.
 
 ## Done
 
@@ -54,7 +54,8 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
   between History / Pinned / each board; "clear history" keeps favorites. Board
   create/delete lives in Settings.
 - Boards/favorites Phase 2: per-board manual ordering (`item_groups.sort_order`,
-  move up/down buttons + context menu); Collections submenu in the menu bar.
+  move up/down buttons + context menu). Status menu does not list boards (since
+  2026-06-14); open collections from the panel sidebar.
   Section switching inside the panel via `Shift+Cmd+↑/↓` (History / Pinned /
   collections). (Earlier global `Ctrl+Cmd+0/1…9` board hotkeys were removed by
   request in favor of in-panel switching.)

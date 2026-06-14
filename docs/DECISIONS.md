@@ -101,7 +101,7 @@ the capture path.
 Decision: On macOS versions that inject automatic SF Symbol / “action” images into
 `NSMenuItem` (e.g. a gear beside **Settings…**), install a one-time `image` getter
 hook that returns `nil` unless the item is marked as carrying an **explicit**
-leading image (Collections folder, source-app icon, image thumbnail).
+leading image (pinned/recent source-app icon, image thumbnail).
 
 Reason: `image = nil` does not suppress system-injected decoration; there is no
 `preferredImageVisibility` in the project’s current SDK. The hook matches the

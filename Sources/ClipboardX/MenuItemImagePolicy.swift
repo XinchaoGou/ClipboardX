@@ -2,7 +2,7 @@ import AppKit
 import ObjectiveC
 
 /// Suppresses macOS 26+ automatic “action” symbol images (e.g. gear on Settings…) on
-/// `NSMenuItem`s while still showing images we assign on purpose (folder, app icon, thumbnail).
+/// `NSMenuItem`s while still showing images we assign on purpose (e.g. app icon, thumbnail).
 ///
 /// AppKit can inject template/SF images for semantically named items even when `image == nil`
 /// from our code. We only restore the real `image` getter for rows marked explicit.
@@ -38,7 +38,7 @@ enum MenuItemImagePolicy {
     }
 
     /// Use for every status-menu row: pass `nil` to hide automatic icons; pass non-`nil` only
-    /// for rows that should keep a leading image (folder, app icon, image thumbnail).
+    /// for rows that should keep a leading image (app icon, image thumbnail).
     static func setExplicitMenuImage(_ item: NSMenuItem, image: NSImage?) {
         if image != nil {
             objc_setAssociatedObject(

@@ -46,33 +46,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             menu.addItem(.separator())
         }
 
-        // Collections (boards) — before Recent so "Recent + ⌘1…9" stays the last content block above Settings.
-        let boards = (try? app.store.groups()) ?? []
-        if !boards.isEmpty {
-            menu.addItem(sectionHeader("Collections"))
-            for board in boards {
-                let submenu = NSMenu()
-                let boardItems = (try? app.store.itemsInGroup(board.id)) ?? []
-                if boardItems.isEmpty {
-                    let empty = NSMenuItem(title: "Empty", action: nil, keyEquivalent: "")
-                    empty.isEnabled = false
-                    empty.indentationLevel = 0
-                    submenu.addItem(empty)
-                } else {
-                    for it in boardItems.prefix(20) { submenu.addItem(makeItem(it)) }
-                }
-                let boardItem = NSMenuItem(title: board.name, action: nil, keyEquivalent: "")
-                boardItem.submenu = submenu
-                let folderIcon = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
-                MenuItemImagePolicy.setExplicitMenuImage(boardItem, image: folderIcon)
-                // Submenu rows sometimes pick up a non-zero indentation; keep flush with Recent.
-                boardItem.indentationLevel = 0
-                menu.addItem(boardItem)
-            }
-            menu.addItem(.separator())
-        }
-
-        // Recent section (history excludes pinned; independent of the panel's view)
+        // Recent section (history excludes pinned; independent of the panel's view).
+        // Collections (boards) live in the panel only — not listed in the status menu.
         menu.addItem(sectionHeader("Recent"))
         let recent = ((try? app.store.recentItems()) ?? []).prefix(15)
         if recent.isEmpty {
