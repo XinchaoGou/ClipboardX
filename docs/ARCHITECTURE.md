@@ -64,7 +64,7 @@ Storage       ClipboardStore  →  SQLite (thin wrapper)  +  on-disk files (Stor
 | File | Responsibility |
 | --- | --- |
 | `main.swift` | Entry point; boots `NSApplication` + `AppDelegate` |
-| `AppDelegate.swift` | Wires all components, sets `.accessory` policy, registers hotkeys |
+| `AppDelegate.swift` | Wires all components, sets `.accessory` policy, installs menu image policy, registers hotkeys |
 | `AppState.swift` | `@MainActor` coordinator/view model shared by all UI |
 | `PasteboardMonitor.swift` | Polls `changeCount`, filters, stores; ignores self-writes |
 | `ClipboardItemParser.swift` | Classifies content, persists images/thumbnails |
@@ -74,7 +74,8 @@ Storage       ClipboardStore  →  SQLite (thin wrapper)  +  on-disk files (Stor
 | `Models.swift` | `ClipboardItem`, `Group`, `ItemType` |
 | `Storage.swift` | On-disk path resolution + directory creation |
 | `Hashing.swift` | SHA-256 content hashing (dedup + file naming) |
-| `MenuBarController.swift` | `NSStatusItem` menu: open panel, pinned, collections (boards), recent, settings |
+| `MenuItemImagePolicy.swift` | Optional `NSMenuItem.image` swizzle: hides macOS 26+ auto action icons unless a row is marked explicit (folder / app / thumb) |
+| `MenuBarController.swift` | `NSStatusItem` menu (section headers flush with Open; icon rows keep the image column; collections submenus, recent; plain Settings… / Quit items) |
 | `PanelController.swift` | Floating `NSPanel` host + show/hide/focus handling |
 | `ClipboardPanelView.swift` | SwiftUI search panel, list rows, edit sheet |
 | `HotkeyManager.swift` | Global hotkeys via Carbon `RegisterEventHotKey` (toggle panel `Shift+Cmd+V`) |

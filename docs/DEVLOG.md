@@ -686,3 +686,153 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 ### Risks
 
 - None.
+
+## 2026-06-14 (menu bar alignment + collection hint in panel)
+
+### Done
+
+- Removed the status-menu tip row; **add-to-collection** guidance now appears in the
+  main panel when a **collection** sidebar section is selected (hint bar when the
+  list has items; extra caption in the empty state).
+- Menu: **section headers** use a 16pt leading spacer image so labels line up with
+  rows that show icons; **rows without icons** use the same spacer; board submenu
+  parents use `indentationLevel = 0`.
+
+### Files Changed
+
+- `Sources/ClipboardX/MenuBarController.swift`, `Sources/ClipboardX/ClipboardPanelView.swift`,
+  `README.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- NSMenu layout varies slightly by macOS theme; spacer uses a near-transparent fill
+  so AppKit still reserves the 16pt column.
+
+## 2026-06-14 (menu bar footer: Settings / Quit flush with Open)
+
+### Done
+
+- **Settings** uses a small **`NSMenuItem` + custom `NSView`** (`SettingsMenuRowView`):
+  borderless `NSButton` draws **Settings…** with **⌘,** on the right via an attributed
+  string tab stop — **no `keyEquivalent` on the menu item**, so macOS does not add the
+  automatic gear or widen the leading image column. Activation calls the same
+  handler as before (opens the settings window). **Keyboard ⌘, while the status menu
+  is open** may no longer trigger Settings (click still works); avoiding a global
+  Carbon `⌘,` hotkey keeps other apps’ **⌘,** behavior intact.
+- **Quit** and **Open** keep explicit `image = nil` and `indentationLevel = 0`.
+
+### Files Changed
+
+- `Sources/ClipboardX/MenuBarController.swift`, `README.md`, `docs/ARCHITECTURE.md`,
+  `docs/ROADMAP.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- If we later need **global ⌘,** for Settings, it must be optional and off by default
+  so it does not steal the shortcut from other applications.
+
+## 2026-06-14 (menu bar: remove section spacer, Settings text inset)
+
+### Done
+
+- Removed the **16×16 transparent leading spacer** from section headers, history rows
+  without icons, and empty placeholders; deleted `menuSectionLeadingSpacer`. Middle
+  sections (**Collections** / **Recent**) now share the same **left text margin** as
+  **Open Clipboard Panel** and **Quit** (rows that show an app/thumbnail/folder icon
+  still shift right by the icon column, which matches system menus).
+- **`SettingsMenuRowView`**: **~13pt** leading/trailing inset on the borderless button
+  and matching **tab stop** position so **Settings…** lines up with standard menu titles.
+
+### Files Changed
+
+- `Sources/ClipboardX/MenuBarController.swift`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`,
+  `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- Exact title inset can differ by macOS version or menu font metrics; tweak the
+  `13` constant if a future OS shifts default menu padding.
+
+## 2026-06-14 (menu bar Settings: plain item, no shortcut)
+
+### Done
+
+- **Settings…** is again a standard **`NSMenuItem`** (no `keyEquivalent`, no custom
+  view). Aligns with **Open** / **Quit** using the same AppKit layout; removes the
+  previous `SettingsMenuRowView` workaround that existed to show **⌘,** without the
+  system gear. Users can still open Settings from the **panel** or other UI; the
+  status menu no longer advertises **⌘,** for Settings.
+
+### Files Changed
+
+- `Sources/ClipboardX/MenuBarController.swift`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`,
+  `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- None specific; restoring **⌘,** on this row would reintroduce gear / alignment tradeoffs
+  on some macOS versions unless we revisit a custom view or accept the system decoration.
+
+## 2026-06-14 (suppress automatic NSMenuItem action images, keep explicit row icons)
+
+### Done
+
+- Added **`MenuItemImagePolicy`**: one-time replacement of `NSMenuItem.image`’s getter
+  so rows **without** an explicit leading image return **`nil`** (hides macOS 26+
+  injected symbols such as Settings gear). Rows we care about (**folder**, **source
+  app icon**, **image thumbnail**) call **`setExplicitMenuImage`** so the original
+  getter runs and icons still show.
+- **`AppDelegate.applicationDidFinishLaunching`**: call **`installIfNeeded()`** before
+  building the status menu.
+
+### Files Changed
+
+- `Sources/ClipboardX/MenuItemImagePolicy.swift`, `Sources/ClipboardX/AppDelegate.swift`,
+  `Sources/ClipboardX/MenuBarController.swift`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`,
+  `docs/DECISIONS.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- The hook applies to **all** `NSMenuItem`s in the process; only items that pass
+  through **`setExplicitMenuImage(..., image: non-nil)`** keep a visible leading image.
+  If a future menu is built without that helper, its icons would be suppressed too.

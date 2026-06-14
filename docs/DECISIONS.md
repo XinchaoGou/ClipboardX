@@ -95,3 +95,14 @@ concealed/transient markers (no exclusion list, no concealed-type skip).
 
 Reason: Product direction — the user chose not to maintain privacy filtering in
 the capture path.
+
+## 013
+
+Decision: On macOS versions that inject automatic SF Symbol / “action” images into
+`NSMenuItem` (e.g. a gear beside **Settings…**), install a one-time `image` getter
+hook that returns `nil` unless the item is marked as carrying an **explicit**
+leading image (Collections folder, source-app icon, image thumbnail).
+
+Reason: `image = nil` does not suppress system-injected decoration; there is no
+`preferredImageVisibility` in the project’s current SDK. The hook matches the
+NetNewsWire-style opt-out while keeping intentional row icons visible.

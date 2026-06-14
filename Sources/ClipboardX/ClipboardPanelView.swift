@@ -22,6 +22,7 @@ struct ClipboardPanelView: View {
             VStack(spacing: 0) {
                 searchBar
                 Divider()
+                collectionAddHintBar
                 listView
             }
         }
@@ -140,12 +141,37 @@ struct ClipboardPanelView: View {
         .padding(.horizontal, 8)
     }
 
+    private var isViewingGroup: Bool {
+        if case .group = app.sidebarSelection { return true }
+        return false
+    }
+
+    /// Shown when a collection is selected and the list has rows (empty state has its own copy).
+    @ViewBuilder private var collectionAddHintBar: some View {
+        if isViewingGroup, !app.items.isEmpty {
+            Text("Add more from History or Pinned: right-click a row → Add to Collection.")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+            Divider()
+        }
+    }
+
     @ViewBuilder private var listView: some View {
         if app.items.isEmpty {
             VStack(spacing: 6) {
                 Spacer()
                 Image(systemName: "tray").font(.system(size: 28)).foregroundStyle(.tertiary)
                 Text(emptyMessage).font(.system(size: 13)).foregroundStyle(.secondary)
+                if isViewingGroup {
+                    Text("Add from History or Pinned: right-click any row → Add to Collection.")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 320)
+                }
                 Spacer()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

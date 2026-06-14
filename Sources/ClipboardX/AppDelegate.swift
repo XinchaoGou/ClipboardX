@@ -11,6 +11,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsController: SettingsWindowController!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Strip macOS 26+ automatic menu action symbols unless we mark a row as explicit (see `MenuItemImagePolicy`).
+        MenuItemImagePolicy.installIfNeeded()
+
         // Menu bar only, no Dock icon.
         NSApp.setActivationPolicy(.accessory)
 

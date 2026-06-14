@@ -33,7 +33,9 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
 - Settings: confirmation dialogs before clearing history (keep favorites / clear all).
 - `scripts/relaunch_app.sh` + AGENTS workflow: quit running ClipboardX, `./build_app.sh release`, open bundle after user-visible changes.
 - Fix: Settings "Request / Open System Settings" now opens the Accessibility privacy pane (AX prompt alone is a no-op when already trusted).
-- Menu bar: Collections (boards) before Recent; gray tip line explains adding items via panel context menu.
+- Menu bar: Collections before Recent; section headers and non-icon rows no longer use a leading spacer (flush with Open); add-to-collection hint moved into the panel when a collection is selected.
+- Menu bar footer: **Settings…** is a plain `NSMenuItem` with **no** `keyEquivalent` (no menu shortcut, no gear); **Quit** keeps `⌘Q`. Both use `image = nil` and `indentationLevel = 0` like Open.
+- macOS 26+ automatic menu item images: `MenuItemImagePolicy` installs a guarded `NSMenuItem.image` hook at launch; status menu uses `setExplicitMenuImage` so only folder / app / thumbnail rows keep a leading image.
 
 ## Done
 

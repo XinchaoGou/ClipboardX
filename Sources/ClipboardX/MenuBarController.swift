@@ -31,6 +31,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         let open = NSMenuItem(title: "Open Clipboard Panel", action: #selector(openPanel), keyEquivalent: "v")
         open.keyEquivalentModifierMask = [.command, .shift]
         open.target = self
+        MenuItemImagePolicy.setExplicitMenuImage(open, image: nil)
+        open.indentationLevel = 0
         menu.addItem(open)
         menu.addItem(.separator())
 
@@ -54,23 +56,19 @@ final class MenuBarController: NSObject, NSMenuDelegate {
                 if boardItems.isEmpty {
                     let empty = NSMenuItem(title: "Empty", action: nil, keyEquivalent: "")
                     empty.isEnabled = false
+                    empty.indentationLevel = 0
                     submenu.addItem(empty)
                 } else {
                     for it in boardItems.prefix(20) { submenu.addItem(makeItem(it)) }
                 }
                 let boardItem = NSMenuItem(title: board.name, action: nil, keyEquivalent: "")
                 boardItem.submenu = submenu
-                boardItem.image = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
+                let folderIcon = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
+                MenuItemImagePolicy.setExplicitMenuImage(boardItem, image: folderIcon)
+                // Submenu rows sometimes pick up a non-zero indentation; keep flush with Recent.
+                boardItem.indentationLevel = 0
                 menu.addItem(boardItem)
             }
-            let tipText = "Tip: in the panel, right-click a row → Add to Collection"
-            let tip = NSMenuItem(title: tipText, action: nil, keyEquivalent: "")
-            tip.isEnabled = false
-            tip.attributedTitle = NSAttributedString(string: tipText, attributes: [
-                .font: NSFont.systemFont(ofSize: 10),
-                .foregroundColor: NSColor.tertiaryLabelColor
-            ])
-            menu.addItem(tip)
             menu.addItem(.separator())
         }
 
@@ -80,6 +78,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         if recent.isEmpty {
             let empty = NSMenuItem(title: "No history yet", action: nil, keyEquivalent: "")
             empty.isEnabled = false
+            empty.indentationLevel = 0
             menu.addItem(empty)
         } else {
             for (i, item) in recent.enumerated() {
@@ -93,18 +92,25 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
-        let settings = NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
+        let settings = NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: "")
         settings.target = self
+        MenuItemImagePolicy.setExplicitMenuImage(settings, image: nil)
+        settings.indentationLevel = 0
         menu.addItem(settings)
 
         let quit = NSMenuItem(title: "Quit ClipboardX", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
+        quit.keyEquivalentModifierMask = [.command]
+        MenuItemImagePolicy.setExplicitMenuImage(quit, image: nil)
+        quit.indentationLevel = 0
         menu.addItem(quit)
     }
 
     private func sectionHeader(_ title: String) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         item.isEnabled = false
+        item.indentationLevel = 0
+        MenuItemImagePolicy.setExplicitMenuImage(item, image: nil)
         item.attributedTitle = NSAttributedString(string: title, attributes: [
             .font: NSFont.systemFont(ofSize: 11, weight: .semibold),
             .foregroundColor: NSColor.secondaryLabelColor
@@ -117,12 +123,15 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         let mi = NSMenuItem(title: title, action: #selector(pasteItem(_:)), keyEquivalent: "")
         mi.target = self
         mi.representedObject = item.id
+        mi.indentationLevel = 0
         if let icon = item.sourceAppIcon {
             icon.size = NSSize(width: 16, height: 16)
-            mi.image = icon
+            MenuItemImagePolicy.setExplicitMenuImage(mi, image: icon)
         } else if item.type == .image, let thumb = item.thumbnailImage {
             thumb.size = NSSize(width: 16, height: 16)
-            mi.image = thumb
+            MenuItemImagePolicy.setExplicitMenuImage(mi, image: thumb)
+        } else {
+            MenuItemImagePolicy.setExplicitMenuImage(mi, image: nil)
         }
         return mi
     }
