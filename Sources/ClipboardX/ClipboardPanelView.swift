@@ -10,6 +10,11 @@ struct ClipboardPanelView: View {
     @State private var editingItem: ClipboardItem?
     @FocusState private var searchFocused: Bool
 
+    private var titleEditingItem: ClipboardItem? {
+        guard let id = app.titleEditingItemID else { return nil }
+        return app.items.first(where: { $0.id == id })
+    }
+
     private var selectedIndex: Int {
         guard let id = app.selectedID else { return 0 }
         return app.items.firstIndex { $0.id == id } ?? 0
@@ -53,10 +58,50 @@ struct ClipboardPanelView: View {
             // Always reselect the top item when entering a section / reopening.
             app.selectedID = app.items.first?.id
         }
-        .onKeyPress(phases: .down) { press in handleKey(press) }
+        .modifier(PanelKeyboardHandler(isEnabled: app.titleEditingItemID == nil, handler: handleKey))
+        .overlay { titleEditOverlay }
         .sheet(item: $editingItem) { item in
             EditTextView(text: item.contentText ?? "") { newText in
                 app.updateText(item, text: newText)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var titleEditOverlay: some View {
+        if let item = titleEditingItem {
+            ZStack {
+                Color.black.opacity(0.35)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        app.titleEditingItemID = nil
+                        searchFocused = true
+                    }
+                EditTitleView(
+                    title: item.title ?? "",
+                    onSave: { newTitle in
+                        app.updateTitle(item, title: newTitle)
+                        app.titleEditingItemID = nil
+                        searchFocused = true
+                    },
+                    onCancel: {
+                        app.titleEditingItemID = nil
+                        searchFocused = true
+                    }
+                )
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .shadow(radius: 20)
+            }
+            .onAppear { PanelDelegate.shared.suppressAutoHide = true }
+            .onDisappear { PanelDelegate.shared.suppressAutoHide = false }
+            .onKeyPress(phases: .down) { press in
+                if press.key == .escape {
+                    app.titleEditingItemID = nil
+                    searchFocused = true
+                    return .handled
+                }
+                return .ignored
             }
         }
     }
@@ -207,7 +252,11 @@ struct ClipboardPanelView: View {
                                 if isHovering { hoveredID = item.id }
                                 else if hoveredID == item.id { hoveredID = nil }
                             },
-                            onEdit: { editingItem = item }
+                            onEdit: { editingItem = item },
+                            onEditTitle: {
+                                searchFocused = false
+                                app.titleEditingItemID = item.id
+                            }
                         )
                     }
                 }
@@ -306,16 +355,32 @@ struct ClipboardRowView: View {
     let onActivate: () -> Void
     let onHoverChange: (Bool) -> Void
     let onEdit: () -> Void
+    let onEditTitle: () -> Void
 
     private var active: Bool { selected || hovered }
+
+    private var previewLine: String {
+        let p = item.preview.trimmingCharacters(in: .whitespacesAndNewlines)
+        return p.isEmpty ? "(empty)" : p
+    }
 
     var body: some View {
         HStack(spacing: 10) {
             thumbnail
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.preview.isEmpty ? "(empty)" : item.preview)
-                    .lineLimit(2)
-                    .font(.system(size: 13))
+                if let title = item.trimmedTitle {
+                    Text(title)
+                        .lineLimit(1)
+                        .font(.system(size: 13, weight: .medium))
+                    Text(previewLine)
+                        .lineLimit(1)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(previewLine)
+                        .lineLimit(2)
+                        .font(.system(size: 13))
+                }
                 HStack(spacing: 6) {
                     if let icon = item.sourceAppIcon {
                         Image(nsImage: icon).resizable().frame(width: 12, height: 12)
@@ -390,8 +455,11 @@ struct ClipboardRowView: View {
             .buttonStyle(.plain)
             .foregroundStyle(item.isPinned ? Color.orange : Color.secondary)
             .help(item.isPinned ? "Unpin" : "Pin")
+            iconButton("character.textbox") { onEditTitle() }
+                .help("Edit Title")
             if item.type == .text || item.type == .url {
                 iconButton("pencil") { onEdit() }
+                    .help("Edit Text")
             }
         }
     }
@@ -405,8 +473,11 @@ struct ClipboardRowView: View {
         Button("Paste") { onActivate() }
         Button("Copy") { app.copyItem(item) }
         Button(item.isPinned ? "Unpin" : "Pin") { app.togglePin(item) }
+        Button("Edit Title…") {
+            onEditTitle()
+        }
         if item.type == .text || item.type == .url {
-            Button("Edit") { onEdit() }
+            Button("Edit Text") { onEdit() }
         }
         if !app.groups.isEmpty {
             Menu("Add to Collection") {
@@ -454,5 +525,87 @@ struct EditTextView: View {
             }
         }
         .padding(16)
+    }
+}
+
+/// In-panel editor for an item's user-defined title (overlay, not sheet — keeps the
+/// floating panel key so auto-hide-on-resign-key and IME composition keep working).
+struct EditTitleView: View {
+    @State var title: String
+    let onSave: (String) -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("Edit Title").font(.headline)
+            IMETextField(text: $title, placeholder: "Title (optional)")
+                .frame(width: 360, height: 24)
+            Text("Shown in lists and search; does not change pasted content.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(width: 360, alignment: .leading)
+            HStack {
+                Button("Cancel", action: onCancel)
+                if !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Button("Clear") {
+                        onSave("")
+                    }
+                }
+                Spacer()
+                Button("Save") { onSave(title) }
+                    .keyboardShortcut(.return, modifiers: .command)
+            }
+        }
+        .padding(16)
+    }
+}
+
+/// AppKit text field wrapper for reliable CJK IME input (SwiftUI TextField is flaky here).
+struct IMETextField: NSViewRepresentable {
+    @Binding var text: String
+    var placeholder: String
+
+    func makeNSView(context: Context) -> NSTextField {
+        let field = NSTextField(string: text)
+        field.placeholderString = placeholder
+        field.delegate = context.coordinator
+        field.isBezeled = true
+        field.bezelStyle = .roundedBezel
+        field.focusRingType = .default
+        field.font = .systemFont(ofSize: NSFont.systemFontSize)
+        DispatchQueue.main.async { field.window?.makeFirstResponder(field) }
+        return field
+    }
+
+    func updateNSView(_ field: NSTextField, context: Context) {
+        if field.stringValue != text {
+            field.stringValue = text
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(text: $text) }
+
+    final class Coordinator: NSObject, NSTextFieldDelegate {
+        var text: Binding<String>
+        init(text: Binding<String>) { self.text = text }
+
+        func controlTextDidChange(_ obj: Notification) {
+            guard let field = obj.object as? NSTextField else { return }
+            text.wrappedValue = field.stringValue
+        }
+    }
+}
+
+/// Applies panel navigation shortcuts only when title editing is not active.
+private struct PanelKeyboardHandler: ViewModifier {
+    let isEnabled: Bool
+    let handler: (KeyPress) -> KeyPress.Result
+
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content.onKeyPress(phases: .down, action: handler)
+        } else {
+            content
+        }
     }
 }

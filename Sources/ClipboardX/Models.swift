@@ -28,6 +28,21 @@ struct ClipboardItem: Identifiable, Hashable {
     var lastUsedAt: Date?
     var useCount: Int
     var isPinned: Bool
+    /// Optional user-defined label for quick identification in lists and search.
+    var title: String?
+
+    /// Non-empty trimmed title, if the user set one.
+    var trimmedTitle: String? {
+        guard let t = title?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty else { return nil }
+        return t
+    }
+
+    /// Primary line for list/menu display: title when set, otherwise preview.
+    var listPrimaryLine: String {
+        if let t = trimmedTitle { return t }
+        let p = preview.trimmingCharacters(in: .whitespacesAndNewlines)
+        return p.isEmpty ? "(empty)" : p
+    }
 
     /// A short, single-line preview used in lists.
     var preview: String {

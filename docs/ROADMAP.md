@@ -23,6 +23,10 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
 
 ## Done (recent additions continued)
 
+- Item titles: optional per-item user label (`items.title`); Edit Title sheet for
+  all types; list shows title + preview subtitle when set; search and menu bar
+  include title; paste unchanged.
+
 - Formatted paste: capture RTF on copy (`rtf/`, `items.rtf_path`); Return pastes
   with formatting, Shift+Return pastes plain text; editing clears RTF.
 - Removed excluded-apps settings, default password-manager bundle blocklist, and

@@ -29,6 +29,10 @@ final class AppState: ObservableObject {
     /// SwiftUI view) so the panel window can act on it from performKeyEquivalent.
     @Published var selectedID: Int64?
 
+    /// Item id whose title overlay is open; nil when not editing. Lives in AppState
+    /// so PanelController can clear it when the panel is dismissed.
+    @Published var titleEditingItemID: Int64?
+
     /// Bumped whenever the panel should reset its selection to the first item
     /// (e.g. on entering a section, searching, or reopening the panel).
     @Published var selectionResetToken = 0
@@ -56,10 +60,10 @@ final class AppState: ObservableObject {
                 items = q.isEmpty ? try store.recentItems() : try store.search(searchText)
             case .pinned:
                 let all = try store.pinnedItems()
-                items = q.isEmpty ? all : all.filter { $0.preview.lowercased().contains(q) }
+                items = q.isEmpty ? all : all.filter { itemMatchesQuery($0, q) }
             case .group(let gid):
                 let all = try store.itemsInGroup(gid)
-                items = q.isEmpty ? all : all.filter { $0.preview.lowercased().contains(q) }
+                items = q.isEmpty ? all : all.filter { itemMatchesQuery($0, q) }
             }
             groups = try store.groups()
         } catch {
@@ -95,6 +99,19 @@ final class AppState: ObservableObject {
     func updateText(_ item: ClipboardItem, text: String) {
         try? store.updateText(id: item.id, text: text)
         reload()
+    }
+
+    func updateTitle(_ item: ClipboardItem, title: String) {
+        try? store.updateTitle(id: item.id, title: title)
+        reload()
+    }
+
+    /// Client-side filter for pinned/board views (history uses store.search).
+    private func itemMatchesQuery(_ item: ClipboardItem, _ q: String) -> Bool {
+        if item.trimmedTitle?.lowercased().contains(q) == true { return true }
+        if item.preview.lowercased().contains(q) { return true }
+        if item.sourceAppName?.lowercased().contains(q) == true { return true }
+        return false
     }
 
     // MARK: - Groups

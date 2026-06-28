@@ -94,7 +94,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     }
 
     private func makeItem(_ item: ClipboardItem) -> NSMenuItem {
-        let title = singleLine(item.preview)
+        let title = singleLine(item.listPrimaryLine)
         let mi = NSMenuItem(title: title, action: #selector(pasteItem(_:)), keyEquivalent: "")
         mi.target = self
         mi.representedObject = item.id

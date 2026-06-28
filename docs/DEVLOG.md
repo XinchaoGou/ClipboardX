@@ -861,3 +861,58 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 ### Risks
 
 - None.
+
+## 2026-06-28 (item titles)
+
+### Done
+
+- Added optional user-defined **title** per clipboard item (`items.title` column +
+  migration). All item types support **Edit Title…** (hover button + context menu);
+  dedicated sheet with Save / Clear / Cancel.
+- Panel list: when title is set, primary line is title and preview is a secondary
+  subtitle; otherwise unchanged single-line preview. Search (history SQL + pinned/board
+  client filter) matches title. Menu bar Recent/Pinned rows show title when set.
+- Paste unchanged — title is metadata only.
+
+### Files Changed
+
+- `Sources/ClipboardX/Models.swift`, `ClipboardStore.swift`, `AppState.swift`,
+  `ClipboardPanelView.swift`, `MenuBarController.swift`, `ClipboardItemParser.swift`,
+  `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds; relaunched `build/ClipboardX.app`.
+
+### Next
+
+- Custom hotkey recording UI; drag-to-reorder within a board.
+
+### Risks
+
+- None.
+
+## 2026-06-28 (fix: edit title panel dismiss + CJK IME)
+
+### Done
+
+- **Edit Title no longer uses SwiftUI `.sheet`**: presented as an in-panel overlay so
+  the floating panel stays key (fixes auto-hide via `windowDidResignKey`, stale sheet
+  on reopen, and grey-panel-then-sheet-on-second-open).
+- **`titleEditingItemID` in AppState**; cleared in `PanelController.hide()`.
+- **`PanelDelegate.suppressAutoHide`** while title overlay is visible.
+- **CJK input**: replaced SwiftUI `TextField` with AppKit `NSTextField` (`IMETextField`);
+  panel navigation `onKeyPress` disabled while editing so IME keys are not swallowed.
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardPanelView.swift`, `PanelController.swift`, `AppState.swift`,
+  `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds; relaunched.
+
+### Risks
+
+- Edit Text still uses `.sheet` and may hit the same resign-key issue (not reported yet).

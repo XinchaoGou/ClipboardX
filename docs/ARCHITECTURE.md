@@ -99,7 +99,8 @@ History, Pinned and each board are filtered views over the same rows
 `item_groups` (many-to-many join, with `sort_order` for per-board manual ordering).
 Item fields: id, type, content_text, content_hash, file_paths_json, image_path,
 thumbnail_path, source_app_name/bundle_id/icon_path, created_at, updated_at,
-last_used_at, use_count, is_pinned, deleted_at.
+last_used_at, use_count, is_pinned, deleted_at, rtf_path, **title** (optional
+user label for list display and search; does not affect paste).
 
 ## On-disk layout
 

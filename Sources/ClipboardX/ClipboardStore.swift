@@ -63,6 +63,7 @@ final class ClipboardStore {
         // exists, which is fine to ignore.
         try? db.execute("ALTER TABLE item_groups ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0;")
         try? db.execute("ALTER TABLE items ADD COLUMN rtf_path TEXT;")
+        try? db.execute("ALTER TABLE items ADD COLUMN title TEXT;")
     }
 
     // MARK: - Row mapping
@@ -91,15 +92,16 @@ final class ClipboardStore {
             updatedAt: r.date(11),
             lastUsedAt: r.optionalDate(12),
             useCount: Int(r.int(13)),
-            isPinned: r.bool(14)
+            isPinned: r.bool(14),
+            title: r.string(16)
         )
     }
 
-    // NOTE: rtf_path is appended last so existing column indices (0…14) are stable.
+    // NOTE: rtf_path and title are appended last so existing column indices (0…14) are stable.
     private let itemColumns = """
     id, type, content_text, content_hash, file_paths_json, image_path, thumbnail_path,
     source_app_name, source_app_bundle_id, source_app_icon_path,
-    created_at, updated_at, last_used_at, use_count, is_pinned, rtf_path
+    created_at, updated_at, last_used_at, use_count, is_pinned, rtf_path, title
     """
 
     // MARK: - Inserts
@@ -185,11 +187,12 @@ final class ClipboardStore {
                 i.content_text LIKE ? OR
                 i.file_paths_json LIKE ? OR
                 i.source_app_name LIKE ? OR
+                i.title LIKE ? OR
                 g.name LIKE ?
             )
             ORDER BY i.updated_at DESC
             LIMIT ?
-            """, [like.sql, like.sql, like.sql, like.sql, limit.sql], map: mapItem)
+            """, [like.sql, like.sql, like.sql, like.sql, like.sql, limit.sql], map: mapItem)
     }
 
     func item(id: Int64) throws -> ClipboardItem? {
@@ -217,6 +220,14 @@ final class ClipboardStore {
         }
         try db.run("UPDATE items SET content_text = ?, content_hash = ?, rtf_path = NULL, updated_at = ? WHERE id = ?",
                    [text.sql, hash.sql, now.sql, id.sql])
+    }
+
+    /// Set or clear a user-defined title. Empty/whitespace-only text clears the title.
+    func updateTitle(id: Int64, title: String) throws {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let now = Date().timeIntervalSince1970
+        try db.run("UPDATE items SET title = ?, updated_at = ? WHERE id = ?",
+                   [trimmed.isEmpty ? SQLiteValue.null : trimmed.sql, now.sql, id.sql])
     }
 
     /// Hard-delete an item and clean up its on-disk image/thumb files.

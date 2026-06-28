@@ -63,7 +63,7 @@ enum ClipboardItemParser {
             rtfPath: rtfPath,
             sourceAppName: source.name, sourceAppBundleID: source.bundleID,
             sourceAppIconPath: iconPath, createdAt: now, updatedAt: now,
-            lastUsedAt: nil, useCount: 0, isPinned: false
+            lastUsedAt: nil, useCount: 0, isPinned: false, title: nil
         )
     }
 
