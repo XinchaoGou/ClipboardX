@@ -82,6 +82,12 @@ Storage       ClipboardStore  →  SQLite (thin wrapper)  +  on-disk files (Stor
 | `PasteExecutor.swift` | Pasteboard write-back + simulated Cmd+V + restore |
 | `SettingsStore.swift` | `UserDefaults`-backed preferences |
 | `SettingsView.swift` | SwiftUI settings + settings window controller |
+| `UpdateConfig.swift` | GitHub repo / asset constants for the updater |
+| `AppVersion.swift` | Numeric semver parsing and comparison |
+| `GitHubReleaseClient.swift` | Fetches `releases/latest` from the GitHub API |
+| `UpdateDownloader.swift` | Downloads `ClipboardX-macos.zip` and extracts the `.app` |
+| `UpdateInstaller.swift` | Post-quit shell helper to replace `/Applications/ClipboardX.app` |
+| `AppUpdateController.swift` | Check schedule, alerts, download/install orchestration |
 
 ## Favorites model (boards)
 
@@ -125,3 +131,26 @@ item clears its RTF.
 
 - **Accessibility** — required to synthesize Cmd+V on paste.
 - **Launch at Login** — via `SMAppService.mainApp` (works from the signed `.app`).
+
+## Auto-update (GitHub Releases)
+
+```
+App launch / 24h timer
+        ▼
+AppUpdateController
+        │  GET api.github.com/.../releases/latest
+        ▼
+Compare tag vs CFBundleShortVersionString
+        │  newer + not skipped
+        ▼
+NSAlert (notes · download / later / skip)
+        ▼
+UpdateDownloader  →  ~/Library/Caches/ClipboardX/Updates/
+        ▼
+UpdateInstaller  →  replace /Applications/ClipboardX.app  →  relaunch
+```
+
+- No third-party updater; version truth is the git tag injected at build time
+  (`build_app.sh release` writes `Info.plist` and emits `build/ClipboardX-macos.zip`).
+- Only non–pre-release **Latest** releases; asset name must be `ClipboardX-macos.zip`.
+- Network: `api.github.com` and `github.com` (asset download) only; no accounts or telemetry.

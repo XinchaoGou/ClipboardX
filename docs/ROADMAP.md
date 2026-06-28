@@ -23,6 +23,13 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
 
 ## Done (recent additions continued)
 
+- **GitHub Releases auto-update**: custom checker (no Sparkle) — launch + 24h poll,
+  Settings toggle and manual check, NSAlert with skip/later, download
+  `ClipboardX-macos.zip`, confirm, replace `/Applications/ClipboardX.app`, relaunch.
+  `build_app.sh release` injects version from git tag and packages the zip.
+- **Release CI**: `.github/workflows/release.yml` — push `v*` tag → build on
+  `macos-14` → upload `ClipboardX-macos.zip` to GitHub Release.
+
 - Panel shortcuts: **⌘P** toggles pin on the selected row; **⌘E** opens Edit…
   (same as row actions; works while the search field is focused).
 

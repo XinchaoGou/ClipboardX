@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotkeys: HotkeyManager!
     private var panelController: PanelController!
     private var settingsController: SettingsWindowController!
+    private var updateController: AppUpdateController!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Strip macOS 26+ automatic menu action symbols unless we mark a row as explicit (see `MenuItemImagePolicy`).
@@ -38,7 +39,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panelController = PanelController(app: appState)
         PanelController.shared = panelController
 
-        settingsController = SettingsWindowController(settings: settings, app: appState)
+        updateController = AppUpdateController(settings: settings)
+        settingsController = SettingsWindowController(settings: settings, app: appState, updates: updateController)
 
         menuBar = MenuBarController(
             app: appState,
@@ -55,6 +57,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if !PasteExecutor.hasAccessibilityPermission {
             PasteExecutor.requestAccessibilityPermission()
         }
+
+        updateController.startAutomaticChecks()
     }
 
     func applicationWillTerminate(_ notification: Notification) {

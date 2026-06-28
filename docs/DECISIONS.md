@@ -106,3 +106,13 @@ leading image (pinned/recent source-app icon, image thumbnail).
 Reason: `image = nil` does not suppress system-injected decoration; there is no
 `preferredImageVisibility` in the project’s current SDK. The hook matches the
 NetNewsWire-style opt-out while keeping intentional row icons visible.
+
+## 014
+
+Decision: In-app updates via a **custom GitHub Releases checker** (no Sparkle).
+
+Reason: Updates are sourced from public GitHub Releases (`ClipboardX-macos.zip`);
+a lightweight `URLSession` + semver compare keeps zero third-party runtime
+dependencies. Flow is semi-automatic: download in-app, user confirms, replace
+`/Applications/ClipboardX.app`, relaunch. Ad-hoc signing is kept for now; users may
+still see Gatekeeper prompts after update.

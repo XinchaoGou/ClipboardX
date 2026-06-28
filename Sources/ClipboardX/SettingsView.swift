@@ -5,6 +5,7 @@ import ServiceManagement
 struct SettingsView: View {
     @ObservedObject var settings: SettingsStore
     @ObservedObject var app: AppState
+    @ObservedObject var updates: AppUpdateController
     @State private var newGroup: String = ""
     @State private var accessibilityGranted = PasteExecutor.hasAccessibilityPermission
     @State private var confirmClearKeepFavorites = false
@@ -59,6 +60,26 @@ struct SettingsView: View {
                     get: { settings.launchAtLogin },
                     set: { settings.launchAtLogin = $0; updateLaunchAtLogin($0) }
                 ))
+            }
+            Section("Updates") {
+                Toggle("Check for updates automatically", isOn: $settings.autoCheckUpdates)
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(updateStatusLine)
+                        if let current = AppVersion.current?.description {
+                            Text("Installed: v\(current)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                    Button("Check Now…") { updates.checkForUpdates(manual: true) }
+                        .disabled(isCheckingForUpdates)
+                }
+                if case .updateAvailable = updates.status {
+                    Button("Install Update…") { updates.downloadAndInstallUpdate() }
+                        .disabled(isCheckingForUpdates)
+                }
             }
             Section("Monitoring") {
                 Slider(value: $settings.pollInterval, in: 0.2...1.0, step: 0.1) {
@@ -118,6 +139,40 @@ struct SettingsView: View {
         .formStyle(.grouped)
     }
 
+    // MARK: - Updates
+
+    private var isCheckingForUpdates: Bool {
+        if case .checking = updates.status { return true }
+        if case .downloading = updates.status { return true }
+        return false
+    }
+
+    private var updateStatusLine: String {
+        switch updates.status {
+        case .idle:
+            if let date = updates.lastCheckDate {
+                return "Last checked \(Self.checkFormatter.localizedString(for: date, relativeTo: Date()))"
+            }
+            return "Not checked yet"
+        case .checking:
+            return "Checking for updates…"
+        case .downloading:
+            return "Downloading update…"
+        case .upToDate:
+            return "You're up to date"
+        case .updateAvailable(let version, _):
+            return "Update available: v\(version)"
+        case .error(let message):
+            return message
+        }
+    }
+
+    private static let checkFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .short
+        return formatter
+    }()
+
     // MARK: - Actions
 
     private func updateLaunchAtLogin(_ enabled: Bool) {
@@ -139,15 +194,17 @@ final class SettingsWindowController {
     private var window: NSWindow?
     private let settings: SettingsStore
     private let app: AppState
+    private let updates: AppUpdateController
 
-    init(settings: SettingsStore, app: AppState) {
+    init(settings: SettingsStore, app: AppState, updates: AppUpdateController) {
         self.settings = settings
         self.app = app
+        self.updates = updates
     }
 
     func show() {
         if window == nil {
-            let view = SettingsView(settings: settings, app: app)
+            let view = SettingsView(settings: settings, app: app, updates: updates)
             let hosting = NSHostingController(rootView: view)
             let w = NSWindow(contentViewController: hosting)
             w.title = "ClipboardX Settings"

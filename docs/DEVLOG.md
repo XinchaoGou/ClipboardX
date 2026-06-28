@@ -1047,3 +1047,62 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - **⌘P** may conflict with Print in apps that route menu commands globally; scoped
   to the panel window only here.
+
+## 2026-06-28 (GitHub Releases auto-update)
+
+### Done
+
+- **Custom updater** (no Sparkle): `GitHubReleaseClient` fetches Latest release,
+  `AppVersion` compares tag vs bundle, `UpdateDownloader` fetches
+  `ClipboardX-macos.zip`, `UpdateInstaller` replaces `/Applications/ClipboardX.app`
+  via a post-quit shell helper (admin prompt when `/Applications` is not writable).
+- **`AppUpdateController`**: check on launch + every 24h (Settings toggle, default on),
+  NSAlert with release notes (download / remind later / skip version), manual **Check Now…**
+  and **Install Update…** in Settings.
+- **`build_app.sh`**: optional `[version]` arg; defaults to latest git tag; writes
+  version into bundled `Info.plist`; release builds emit `build/ClipboardX-macos.zip`.
+
+### Files Changed
+
+- `Sources/ClipboardX/UpdateConfig.swift`, `AppVersion.swift`, `GitHubReleaseClient.swift`,
+  `UpdateDownloader.swift`, `UpdateInstaller.swift`, `AppUpdateController.swift`,
+  `SettingsStore.swift`, `SettingsView.swift`, `AppDelegate.swift`, `build_app.sh`,
+  `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/ROADMAP.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds; relaunched `build/ClipboardX.app`.
+
+### Next
+
+- Publish first GitHub Release with `ClipboardX-macos.zip`; optional CI workflow.
+
+### Risks
+
+- Ad-hoc signing: Gatekeeper may still prompt after update; Accessibility trust is
+  tied to bundle path under `/Applications`.
+
+## 2026-06-28 (first release tag + GitHub Actions)
+
+### Done
+
+- Added **`.github/workflows/release.yml`**: on `v*` tag push, build on `macos-14`,
+  run `./build_app.sh release`, attach `ClipboardX-macos.zip` via `softprops/action-gh-release`.
+- Bumped template **`Resources/Info.plist`** to `0.3.0`; tagged **`v0.3.0`** as first
+  public release with in-app auto-update.
+
+### Files Changed
+
+- `.github/workflows/release.yml`, `Resources/Info.plist`, `docs/ROADMAP.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- Tag `v0.3.0` pushed; release workflow publishes the zip asset.
+
+### Next
+
+- Install from `/Applications` and verify **Settings → Check Now…** against the live release.
+
+### Risks
+
+- CI requires Xcode on the runner (`xcode-select`); fails if Apple changes default image layout.
