@@ -961,3 +961,23 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 ### Risks
 
 - None.
+
+## 2026-06-28 (UI: polish edit overlay)
+
+### Done
+
+- **Edit overlay visual refresh**: header with icon + subtitle, section labels,
+  unified field styling (subtle fill + border), footer with bordered Cancel and
+  prominent Save; `IMETextField` supports borderless mode for in-card inputs.
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardPanelView.swift`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds; relaunched.
+
+### Risks
+
+- None.

@@ -101,8 +101,12 @@ struct ClipboardPanelView: View {
                     }
                 )
                 .background(.regularMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .shadow(radius: 20)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.22), radius: 24, y: 10)
             }
             .onAppear { PanelDelegate.shared.suppressAutoHide = true }
             .onDisappear { PanelDelegate.shared.suppressAutoHide = false }
@@ -513,47 +517,125 @@ struct EditItemView: View {
     let onSave: (String, String?) -> Void
     let onCancel: () -> Void
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Edit").font(.headline)
+    private var hasTitle: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Title").font(.subheadline).foregroundStyle(.secondary)
-                IMETextField(text: $title, placeholder: "Title (optional)")
-                    .frame(width: 420, height: 24)
-                Text("Shown in lists and search; does not change pasted content.")
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            Divider()
+            formBody
+            Divider()
+            footer
+        }
+        .frame(width: 440)
+    }
+
+    private var header: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "square.and.pencil")
+                .font(.system(size: 22, weight: .medium))
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 36, height: 36)
+                .background(Color.accentColor.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Edit Item")
+                    .font(.system(size: 15, weight: .semibold))
+                Text(showsTextEditor ? "Update title and text content" : "Update display title")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 18)
+        .padding(.bottom, 14)
+    }
+
+    private var formBody: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            editField(
+                label: "Title",
+                hint: "Shown in lists and search; does not change pasted content."
+            ) {
+                IMETextField(text: $title, placeholder: "Title (optional)", bordered: false)
+                    .frame(height: 22)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(fieldBackground)
+            }
 
             if showsTextEditor {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Text").font(.subheadline).foregroundStyle(.secondary)
+                editField(
+                    label: "Text",
+                    hint: "Editing drops rich formatting."
+                ) {
                     TextEditor(text: $text)
                         .font(.system(size: 13, design: .monospaced))
-                        .frame(width: 420, height: 200)
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.secondary.opacity(0.3)))
-                    Text("Editing drops rich formatting.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .scrollContentBackground(.hidden)
+                        .padding(8)
+                        .frame(minHeight: 120, maxHeight: 180)
+                        .background(fieldBackground)
                 }
-            }
-
-            HStack {
-                Button("Cancel", action: onCancel)
-                if !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Button("Clear Title") {
-                        onSave("", showsTextEditor ? text : nil)
-                    }
-                }
-                Spacer()
-                Button("Save") {
-                    onSave(title, showsTextEditor ? text : nil)
-                }
-                .keyboardShortcut(.return, modifiers: .command)
             }
         }
-        .padding(16)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 18)
+    }
+
+    private var footer: some View {
+        HStack(spacing: 10) {
+            Button("Cancel", action: onCancel)
+                .buttonStyle(.bordered)
+                .keyboardShortcut(.cancelAction)
+
+            if hasTitle {
+                Button("Clear Title") {
+                    onSave("", showsTextEditor ? text : nil)
+                }
+                .buttonStyle(.borderless)
+                .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 0)
+
+            Button("Save") {
+                onSave(title, showsTextEditor ? text : nil)
+            }
+            .buttonStyle(.borderedProminent)
+            .keyboardShortcut(.defaultAction)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+    }
+
+    private func editField<Content: View>(
+        label: String,
+        hint: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label.uppercased())
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.tertiary)
+                .tracking(0.4)
+            content()
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                )
+            Text(hint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var fieldBackground: some View {
+        Color.primary.opacity(0.04)
     }
 }
 
@@ -561,14 +643,21 @@ struct EditItemView: View {
 struct IMETextField: NSViewRepresentable {
     @Binding var text: String
     var placeholder: String
+    var bordered: Bool = true
 
     func makeNSView(context: Context) -> NSTextField {
         let field = NSTextField(string: text)
         field.placeholderString = placeholder
         field.delegate = context.coordinator
-        field.isBezeled = true
-        field.bezelStyle = .roundedBezel
-        field.focusRingType = .default
+        if bordered {
+            field.isBezeled = true
+            field.bezelStyle = .roundedBezel
+            field.focusRingType = .default
+        } else {
+            field.isBezeled = false
+            field.drawsBackground = false
+            field.focusRingType = .none
+        }
         field.font = .systemFont(ofSize: NSFont.systemFontSize)
         DispatchQueue.main.async { field.window?.makeFirstResponder(field) }
         return field
