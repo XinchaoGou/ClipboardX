@@ -23,7 +23,8 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
 
 ## Done (recent additions continued)
 
-- **GitHub Releases auto-update**: custom checker (no Sparkle) — launch + 24h poll,
+- **Release install guide**: `docs/INSTALLATION.md` — Gatekeeper / Open Anyway steps for
+  ad-hoc signed builds; bundled inside `ClipboardX-macos.zip` and attached to GitHub Releases. custom checker (no Sparkle) — launch + 24h poll,
   Settings toggle and manual check, NSAlert with skip/later, download
   `ClipboardX-macos.zip`, confirm, replace `/Applications/ClipboardX.app`, relaunch.
   `build_app.sh release` injects version from git tag and packages the zip.

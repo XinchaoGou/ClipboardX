@@ -26,5 +26,18 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/ClipboardX-macos.zip
+          files: |
+            build/ClipboardX-macos.zip
+            docs/INSTALLATION.md
+          body: |
+            ## 首次安装必读
+
+            ClipboardX 使用 ad-hoc 签名，首次打开时 macOS Gatekeeper 会拦截。请先阅读 **INSTALLATION.md**（Release 附件，或 zip 包内同名文件）。
+
+            **简要步骤：**
+            1. 解压 `ClipboardX-macos.zip`，将 `ClipboardX.app` 拖到「应用程序」
+            2. 双击打开被拦截后，前往 **系统设置 → 隐私与安全性 → 安全性 → 仍要打开（Open Anyway）**
+            3. 授予 **辅助功能（Accessibility）** 权限
+
+            macOS 15 Sequoia 起必须使用系统设置中的「仍要打开」；macOS 14 也可在 Finder 中 Control+点击 → 打开。
           generate_release_notes: true

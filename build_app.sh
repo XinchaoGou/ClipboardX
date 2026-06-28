@@ -50,9 +50,17 @@ codesign --force --deep --sign - \
 
 if [[ "${CONFIG}" == "release" ]]; then
   echo "==> Packaging ${ZIP_PATH}…"
-  rm -f "${ZIP_PATH}"
-  ditto -c -k --keepParent "${APP_DIR}" "${ZIP_PATH}"
-  echo "    Upload ${ZIP_PATH} to GitHub Releases as ${ZIP_PATH##*/}"
+  STAGING_DIR="build/release-staging"
+  rm -rf "${STAGING_DIR}" "${ZIP_PATH}"
+  mkdir -p "${STAGING_DIR}"
+  ditto "${APP_DIR}" "${STAGING_DIR}/${APP_NAME}.app"
+  cp "docs/INSTALLATION.md" "${STAGING_DIR}/INSTALLATION.md"
+  (
+    cd "${STAGING_DIR}"
+    zip -r -y "../ClipboardX-macos.zip" .
+  )
+  rm -rf "${STAGING_DIR}"
+  echo "    Upload ${ZIP_PATH} to GitHub Releases (includes INSTALLATION.md)"
 fi
 
 echo "==> Done: ${APP_DIR} (v${VERSION})"

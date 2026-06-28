@@ -1106,3 +1106,31 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 ### Risks
 
 - CI requires Xcode on the runner (`xcode-select`); fails if Apple changes default image layout.
+
+## 2026-06-28 (v0.3.1 — install guide in release)
+
+### Done
+
+- Added **`docs/INSTALLATION.md`**: Chinese user guide for first launch on ad-hoc signed
+  builds (Gatekeeper → Privacy & Security → Open Anyway; Accessibility permission).
+- **`build_app.sh release`**: zip now contains `ClipboardX.app` + `INSTALLATION.md`.
+- **Release CI**: attaches `docs/INSTALLATION.md` separately and adds install summary to
+  release body. Tagged **`v0.3.1`**.
+
+### Files Changed
+
+- `docs/INSTALLATION.md`, `build_app.sh`, `.github/workflows/release.yml`,
+  `docs/ROADMAP.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- Tag `v0.3.1` pushed; GitHub Release includes zip (with in-archive guide) + standalone
+  `INSTALLATION.md`.
+
+### Next
+
+- Install from `/Applications` and verify **Settings → Check Now…** against the live release.
+
+### Risks
+
+- Ad-hoc signing: users must follow INSTALLATION.md; updater still replaces only the `.app`.
