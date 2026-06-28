@@ -35,14 +35,20 @@ struct ClipboardPanelView: View {
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.08)))
-        // Cmd+Delete deletes the selection even while the search field is focused.
+        // Cmd+Delete / Cmd+P / Cmd+E work even while the search field is focused.
         // (Shift+Return for plain paste is handled at the window level in
-        // FloatingPanel.performKeyEquivalent, since the field swallows it here.)
+        // PanelController's key monitor, since the field swallows it here.)
         .background(
-            Button("", action: deleteSelected)
-                .keyboardShortcut(.delete, modifiers: .command)
-                .opacity(0)
-                .accessibilityHidden(true)
+            ZStack {
+                Button("", action: deleteSelected)
+                    .keyboardShortcut(.delete, modifiers: .command)
+                Button("", action: pinSelected)
+                    .keyboardShortcut("p", modifiers: .command)
+                Button("", action: editSelected)
+                    .keyboardShortcut("e", modifiers: .command)
+            }
+            .opacity(0)
+            .accessibilityHidden(true)
         )
         .onAppear {
             searchFocusTrigger += 1
@@ -359,6 +365,21 @@ struct ClipboardPanelView: View {
             : (idx - 1 >= 0 ? app.items[idx - 1].id : nil)
         app.delete(victim)
         app.selectedID = nextID ?? app.items.first?.id
+    }
+
+    private func pinSelected() {
+        guard app.editingItemID == nil else { return }
+        let idx = selectedIndex
+        guard idx < app.items.count, !app.items.isEmpty else { return }
+        app.togglePin(app.items[idx])
+    }
+
+    private func editSelected() {
+        guard app.editingItemID == nil else { return }
+        let idx = selectedIndex
+        guard idx < app.items.count, !app.items.isEmpty else { return }
+        NSApp.keyWindow?.makeFirstResponder(nil)
+        app.editingItemID = app.items[idx].id
     }
 }
 

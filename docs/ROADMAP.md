@@ -23,6 +23,9 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
 
 ## Done (recent additions continued)
 
+- Panel shortcuts: **⌘P** toggles pin on the selected row; **⌘E** opens Edit…
+  (same as row actions; works while the search field is focused).
+
 - Search IME: panel search uses `IMETextField`; Return commits CJK composition
   before paste-on-Return (no longer steals Enter from the input method).
 

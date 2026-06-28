@@ -1025,3 +1025,25 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 ### Risks
 
 - None.
+
+## 2026-06-28 (shortcuts: ⌘P pin, ⌘E edit)
+
+### Done
+
+- **Panel row shortcuts**: when a list row is selected, **⌘P** toggles pin/unpin
+  and **⌘E** opens the Edit… overlay — same behavior as the row action buttons
+  and context menu. Implemented as hidden `keyboardShortcut` buttons (like
+  **⌘Delete**) so they work while the search field has keyboard focus.
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardPanelView.swift`, `docs/ROADMAP.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds; relaunched.
+
+### Risks
+
+- **⌘P** may conflict with Print in apps that route menu commands globally; scoped
+  to the panel window only here.
