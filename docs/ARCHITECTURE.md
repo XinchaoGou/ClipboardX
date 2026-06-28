@@ -77,7 +77,7 @@ Storage       ClipboardStore  →  SQLite (thin wrapper)  +  on-disk files (Stor
 | `MenuItemImagePolicy.swift` | Optional `NSMenuItem.image` swizzle: hides macOS 26+ auto action icons unless a row is marked explicit (app / thumbnail icons on status-menu rows) |
 | `MenuBarController.swift` | `NSStatusItem` menu: Open, optional Pinned, Recent (⌘1…9), Settings…, Quit — boards/collections only in the panel |
 | `PanelController.swift` | Floating `NSPanel` host + show/hide/focus handling |
-| `ClipboardPanelView.swift` | SwiftUI search panel, list rows, edit sheet |
+| `ClipboardPanelView.swift` | SwiftUI search panel, list rows, edit overlay |
 | `HotkeyManager.swift` | Global hotkeys via Carbon `RegisterEventHotKey` (toggle panel `Shift+Cmd+V`) |
 | `PasteExecutor.swift` | Pasteboard write-back + simulated Cmd+V + restore |
 | `SettingsStore.swift` | `UserDefaults`-backed preferences |

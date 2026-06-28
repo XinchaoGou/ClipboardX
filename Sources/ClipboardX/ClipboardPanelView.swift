@@ -7,11 +7,10 @@ struct ClipboardPanelView: View {
     // Selection (in AppState) and hover are tracked by stable item id (not list
     // position) so they stay attached to the right row when the list reorders.
     @State private var hoveredID: Int64?
-    @State private var editingItem: ClipboardItem?
     @FocusState private var searchFocused: Bool
 
-    private var titleEditingItem: ClipboardItem? {
-        guard let id = app.titleEditingItemID else { return nil }
+    private var editingItem: ClipboardItem? {
+        guard let id = app.editingItemID else { return nil }
         return app.items.first(where: { $0.id == id })
     }
 
@@ -58,35 +57,47 @@ struct ClipboardPanelView: View {
             // Always reselect the top item when entering a section / reopening.
             app.selectedID = app.items.first?.id
         }
-        .modifier(PanelKeyboardHandler(isEnabled: app.titleEditingItemID == nil, handler: handleKey))
-        .overlay { titleEditOverlay }
-        .sheet(item: $editingItem) { item in
-            EditTextView(text: item.contentText ?? "") { newText in
-                app.updateText(item, text: newText)
-            }
+        .modifier(PanelKeyboardHandler(isEnabled: app.editingItemID == nil, handler: handleKey))
+        .overlay { itemEditOverlay }
+        .onChange(of: app.editingItemID) { _, id in
+            if id == nil { restorePanelFocus() }
+        }
+    }
+
+    /// Return keyboard control to the search field after the edit overlay closes.
+    /// AppKit fields in the overlay (IMETextField) steal first responder; SwiftUI
+    /// `@FocusState` alone does not reliably take it back for arrow-key navigation.
+    private func restorePanelFocus() {
+        NSApp.keyWindow?.makeFirstResponder(nil)
+        searchFocused = false
+        DispatchQueue.main.async {
+            searchFocused = true
         }
     }
 
     @ViewBuilder
-    private var titleEditOverlay: some View {
-        if let item = titleEditingItem {
+    private var itemEditOverlay: some View {
+        if let item = editingItem {
+            let showsTextEditor = item.type == .text || item.type == .url
             ZStack {
                 Color.black.opacity(0.35)
                     .ignoresSafeArea()
                     .onTapGesture {
-                        app.titleEditingItemID = nil
-                        searchFocused = true
+                        app.editingItemID = nil
                     }
-                EditTitleView(
+                EditItemView(
                     title: item.title ?? "",
-                    onSave: { newTitle in
+                    text: item.contentText ?? "",
+                    showsTextEditor: showsTextEditor,
+                    onSave: { newTitle, newText in
                         app.updateTitle(item, title: newTitle)
-                        app.titleEditingItemID = nil
-                        searchFocused = true
+                        if showsTextEditor, let newText {
+                            app.updateText(item, text: newText)
+                        }
+                        app.editingItemID = nil
                     },
                     onCancel: {
-                        app.titleEditingItemID = nil
-                        searchFocused = true
+                        app.editingItemID = nil
                     }
                 )
                 .background(.regularMaterial)
@@ -97,8 +108,7 @@ struct ClipboardPanelView: View {
             .onDisappear { PanelDelegate.shared.suppressAutoHide = false }
             .onKeyPress(phases: .down) { press in
                 if press.key == .escape {
-                    app.titleEditingItemID = nil
-                    searchFocused = true
+                    app.editingItemID = nil
                     return .handled
                 }
                 return .ignored
@@ -252,10 +262,9 @@ struct ClipboardPanelView: View {
                                 if isHovering { hoveredID = item.id }
                                 else if hoveredID == item.id { hoveredID = nil }
                             },
-                            onEdit: { editingItem = item },
-                            onEditTitle: {
+                            onEdit: {
                                 searchFocused = false
-                                app.titleEditingItemID = item.id
+                                app.editingItemID = item.id
                             }
                         )
                     }
@@ -355,7 +364,6 @@ struct ClipboardRowView: View {
     let onActivate: () -> Void
     let onHoverChange: (Bool) -> Void
     let onEdit: () -> Void
-    let onEditTitle: () -> Void
 
     private var active: Bool { selected || hovered }
 
@@ -455,12 +463,8 @@ struct ClipboardRowView: View {
             .buttonStyle(.plain)
             .foregroundStyle(item.isPinned ? Color.orange : Color.secondary)
             .help(item.isPinned ? "Unpin" : "Pin")
-            iconButton("character.textbox") { onEditTitle() }
-                .help("Edit Title")
-            if item.type == .text || item.type == .url {
-                iconButton("pencil") { onEdit() }
-                    .help("Edit Text")
-            }
+            iconButton("pencil") { onEdit() }
+                .help("Edit")
         }
     }
 
@@ -473,12 +477,7 @@ struct ClipboardRowView: View {
         Button("Paste") { onActivate() }
         Button("Copy") { app.copyItem(item) }
         Button(item.isPinned ? "Unpin" : "Pin") { app.togglePin(item) }
-        Button("Edit Title…") {
-            onEditTitle()
-        }
-        if item.type == .text || item.type == .url {
-            Button("Edit Text") { onEdit() }
-        }
+        Button("Edit…") { onEdit() }
         if !app.groups.isEmpty {
             Menu("Add to Collection") {
                 let inGroups = app.groupIDs(for: item)
@@ -505,55 +504,53 @@ struct ClipboardRowView: View {
     static let relativeFormatter = RelativeDateTimeFormatter()
 }
 
-/// Sheet for editing a text item.
-struct EditTextView: View {
-    @State var text: String
-    let onSave: (String) -> Void
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        VStack(spacing: 12) {
-            Text("Edit Text").font(.headline)
-            TextEditor(text: $text)
-                .font(.system(size: 13, design: .monospaced))
-                .frame(width: 420, height: 240)
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.secondary.opacity(0.3)))
-            HStack {
-                Button("Cancel") { dismiss() }
-                Spacer()
-                Button("Save") { onSave(text); dismiss() }.keyboardShortcut(.return, modifiers: .command)
-            }
-        }
-        .padding(16)
-    }
-}
-
-/// In-panel editor for an item's user-defined title (overlay, not sheet — keeps the
-/// floating panel key so auto-hide-on-resign-key and IME composition keep working).
-struct EditTitleView: View {
+/// In-panel editor for an item's title and optional text content (overlay, not
+/// sheet — keeps the floating panel key so auto-hide-on-resign-key and IME work).
+struct EditItemView: View {
     @State var title: String
-    let onSave: (String) -> Void
+    @State var text: String
+    let showsTextEditor: Bool
+    let onSave: (String, String?) -> Void
     let onCancel: () -> Void
 
     var body: some View {
-        VStack(spacing: 12) {
-            Text("Edit Title").font(.headline)
-            IMETextField(text: $title, placeholder: "Title (optional)")
-                .frame(width: 360, height: 24)
-            Text("Shown in lists and search; does not change pasted content.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(width: 360, alignment: .leading)
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Edit").font(.headline)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Title").font(.subheadline).foregroundStyle(.secondary)
+                IMETextField(text: $title, placeholder: "Title (optional)")
+                    .frame(width: 420, height: 24)
+                Text("Shown in lists and search; does not change pasted content.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if showsTextEditor {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Text").font(.subheadline).foregroundStyle(.secondary)
+                    TextEditor(text: $text)
+                        .font(.system(size: 13, design: .monospaced))
+                        .frame(width: 420, height: 200)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.secondary.opacity(0.3)))
+                    Text("Editing drops rich formatting.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             HStack {
                 Button("Cancel", action: onCancel)
                 if !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Button("Clear") {
-                        onSave("")
+                    Button("Clear Title") {
+                        onSave("", showsTextEditor ? text : nil)
                     }
                 }
                 Spacer()
-                Button("Save") { onSave(title) }
-                    .keyboardShortcut(.return, modifiers: .command)
+                Button("Save") {
+                    onSave(title, showsTextEditor ? text : nil)
+                }
+                .keyboardShortcut(.return, modifiers: .command)
             }
         }
         .padding(16)
@@ -585,6 +582,15 @@ struct IMETextField: NSViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator(text: $text) }
 
+    static func dismantleNSView(_ field: NSTextField, coordinator: Coordinator) {
+        // Release first responder before the overlay is torn down; otherwise arrow
+        // keys stop reaching panel navigation until the panel is reopened.
+        if field.window?.firstResponder === field
+            || field.window?.firstResponder === field.currentEditor() {
+            field.window?.makeFirstResponder(nil)
+        }
+    }
+
     final class Coordinator: NSObject, NSTextFieldDelegate {
         var text: Binding<String>
         init(text: Binding<String>) { self.text = text }
@@ -596,7 +602,7 @@ struct IMETextField: NSViewRepresentable {
     }
 }
 
-/// Applies panel navigation shortcuts only when title editing is not active.
+/// Applies panel navigation shortcuts only when item editing is not active.
 private struct PanelKeyboardHandler: ViewModifier {
     let isEnabled: Bool
     let handler: (KeyPress) -> KeyPress.Result

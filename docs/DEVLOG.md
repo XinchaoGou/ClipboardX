@@ -916,3 +916,48 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 ### Risks
 
 - Edit Text still uses `.sheet` and may hit the same resign-key issue (not reported yet).
+
+## 2026-06-28 (unified Edit overlay: title + text)
+
+### Done
+
+- **Single Edit entry**: one hover button and one context-menu item (**Edit…**) replaces
+  separate Edit Title / Edit Text actions.
+- **`EditItemView` overlay**: title field on top; text editor below for text/url items;
+  image/file items show title only. Reuses in-panel overlay (not sheet) for IME and
+  auto-hide stability.
+- **`titleEditingItemID` renamed to `editingItemID`** in `AppState`; cleared on panel hide.
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardPanelView.swift`, `AppState.swift`, `PanelController.swift`,
+  `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds; relaunched.
+
+### Risks
+
+- None.
+
+## 2026-06-28 (fix: arrow keys after closing edit overlay)
+
+### Done
+
+- **Focus restore after edit**: `onChange(of: editingItemID)` calls `restorePanelFocus()`
+  (clear AppKit first responder, then re-focus search field on next run loop).
+- **`IMETextField.dismantleNSView`**: resigns first responder when the overlay is torn
+  down so arrow-key navigation works immediately after Save/Cancel/Esc.
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardPanelView.swift`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds; relaunched.
+
+### Risks
+
+- None.

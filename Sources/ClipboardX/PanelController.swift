@@ -69,7 +69,7 @@ final class PanelController {
     }
 
     func hide() {
-        app.titleEditingItemID = nil
+        app.editingItemID = nil
         PanelDelegate.shared.suppressAutoHide = false
         panel?.orderOut(nil)
         // Return focus to the app the user was using so Cmd+V lands there.
@@ -103,7 +103,7 @@ final class PanelController {
 }
 
 /// Hides the panel when it loses key status (click outside / app switch).
-/// Skips auto-hide while an in-panel modal overlay (e.g. edit title) is open.
+/// Skips auto-hide while an in-panel modal overlay (e.g. edit item) is open.
 final class PanelDelegate: NSObject, NSWindowDelegate {
     static let shared = PanelDelegate()
     /// When true, `windowDidResignKey` will not order the panel out.

@@ -29,9 +29,9 @@ final class AppState: ObservableObject {
     /// SwiftUI view) so the panel window can act on it from performKeyEquivalent.
     @Published var selectedID: Int64?
 
-    /// Item id whose title overlay is open; nil when not editing. Lives in AppState
+    /// Item id whose edit overlay is open; nil when not editing. Lives in AppState
     /// so PanelController can clear it when the panel is dismissed.
-    @Published var titleEditingItemID: Int64?
+    @Published var editingItemID: Int64?
 
     /// Bumped whenever the panel should reset its selection to the first item
     /// (e.g. on entering a section, searching, or reopening the panel).
