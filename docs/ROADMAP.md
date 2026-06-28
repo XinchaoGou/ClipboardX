@@ -23,6 +23,9 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
 
 ## Done (recent additions continued)
 
+- Search IME: panel search uses `IMETextField`; Return commits CJK composition
+  before paste-on-Return (no longer steals Enter from the input method).
+
 - Item titles: optional per-item user label (`items.title`); unified **Edit…** overlay
   (title + text for text/url) for all types; list shows title + preview subtitle when
   set; search and menu bar include title; paste unchanged.
@@ -53,6 +56,8 @@ subscriptions, full rich-text, OCR, AI summarize/rewrite, browser extension, tea
 - Bugfix: dedup text/url on trimmed content so whitespace-only variants
   (e.g. iTerm2 copy-on-select) no longer create visually identical duplicate rows.
 - Bugfix: reliable panel hover/selection (tracked by item id) + full-row hit testing.
+- Bugfix: sidebar section rows (History / Pinned / collections) use full-row hit
+  testing — click anywhere on the row, not only on the label text.
 - Boards/favorites Phase 1 (iPaste-style): unified `items` table where pinned or
   board-member items are exempt from auto-cleanup; panel left sidebar to switch
   between History / Pinned / each board; "clear history" keeps favorites. Board

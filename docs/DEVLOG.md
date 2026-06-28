@@ -962,6 +962,30 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 
 - None.
 
+## 2026-06-28 (fix: search field CJK IME Return priority)
+
+### Done
+
+- **Search bar IME**: replaced SwiftUI `TextField` + `.onSubmit` with `IMETextField`
+  (same AppKit path as the edit overlay). Return is handled in
+  `control(_:textView:doCommandBy:)` — when `hasMarkedText` is true the key goes to
+  the IME; otherwise `onReturn` pastes the selected item.
+- **Panel keyboard**: `handleKey` no longer intercepts Return (`.ignored`) so
+  SwiftUI `onKeyPress` cannot beat the input method during composition.
+- **`IMETextField`**: added `font`, `autoFocus`, `focusTrigger`, and optional `onReturn`.
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardPanelView.swift`, `docs/ROADMAP.md`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds; relaunched.
+
+### Risks
+
+- None.
+
 ## 2026-06-28 (UI: polish edit overlay)
 
 ### Done
@@ -973,6 +997,26 @@ Append-only development log. Newest entries at the bottom. Never overwrite histo
 ### Files Changed
 
 - `Sources/ClipboardX/ClipboardPanelView.swift`, `docs/DEVLOG.md`
+
+### Current Status
+
+- `swift build` succeeds; relaunched.
+
+### Risks
+
+- None.
+
+## 2026-06-28 (UI: sidebar full-row click)
+
+### Done
+
+- **Sidebar hit testing**: History / Pinned / collection rows now use
+  `.contentShape` so clicks on trailing empty space (not just the label text)
+  switch sections — same pattern as the item list rows.
+
+### Files Changed
+
+- `Sources/ClipboardX/ClipboardPanelView.swift`, `docs/ROADMAP.md`, `docs/DEVLOG.md`
 
 ### Current Status
 

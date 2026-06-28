@@ -7,7 +7,8 @@ struct ClipboardPanelView: View {
     // Selection (in AppState) and hover are tracked by stable item id (not list
     // position) so they stay attached to the right row when the list reorders.
     @State private var hoveredID: Int64?
-    @FocusState private var searchFocused: Bool
+    /// Increment to re-focus the AppKit search field (e.g. after closing edit overlay).
+    @State private var searchFocusTrigger = 0
 
     private var editingItem: ClipboardItem? {
         guard let id = app.editingItemID else { return nil }
@@ -44,7 +45,7 @@ struct ClipboardPanelView: View {
                 .accessibilityHidden(true)
         )
         .onAppear {
-            searchFocused = true
+            searchFocusTrigger += 1
             app.selectedID = app.items.first?.id
         }
         .onChange(of: app.items) { _, items in
@@ -66,13 +67,10 @@ struct ClipboardPanelView: View {
 
     /// Return keyboard control to the search field after the edit overlay closes.
     /// AppKit fields in the overlay (IMETextField) steal first responder; SwiftUI
-    /// `@FocusState` alone does not reliably take it back for arrow-key navigation.
+    /// focus state does not reliably take it back for arrow-key navigation.
     private func restorePanelFocus() {
         NSApp.keyWindow?.makeFirstResponder(nil)
-        searchFocused = false
-        DispatchQueue.main.async {
-            searchFocused = true
-        }
+        searchFocusTrigger += 1
     }
 
     @ViewBuilder
@@ -123,11 +121,14 @@ struct ClipboardPanelView: View {
     private var searchBar: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-            TextField("Search clipboard…", text: $app.searchText)
-                .textFieldStyle(.plain)
-                .font(.system(size: 16))
-                .focused($searchFocused)
-                .onSubmit { pasteSelected() }
+            IMETextField(
+                text: $app.searchText,
+                placeholder: "Search clipboard…",
+                bordered: false,
+                font: .systemFont(ofSize: 16),
+                focusTrigger: searchFocusTrigger,
+                onReturn: { pasteSelected() }
+            )
             if !app.searchText.isEmpty {
                 Button { app.searchText = "" } label: {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
@@ -195,6 +196,8 @@ struct ClipboardPanelView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(active ? Color.accentColor : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: 6))
+            // Whole row (including trailing empty space) is clickable.
+            .contentShape(RoundedRectangle(cornerRadius: 6))
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 8)
@@ -267,7 +270,7 @@ struct ClipboardPanelView: View {
                                 else if hoveredID == item.id { hoveredID = nil }
                             },
                             onEdit: {
-                                searchFocused = false
+                                NSApp.keyWindow?.makeFirstResponder(nil)
                                 app.editingItemID = item.id
                             }
                         )
@@ -334,8 +337,9 @@ struct ClipboardPanelView: View {
             PanelController.shared?.hide()
             return .handled
         case .return:
-            pasteSelected()
-            return .handled
+            // Paste-on-Return is handled by the search IMETextField (IME-safe).
+            // Ignore here so CJK composition is not interrupted.
+            return .ignored
         default:
             return .ignored
         }
@@ -644,6 +648,10 @@ struct IMETextField: NSViewRepresentable {
     @Binding var text: String
     var placeholder: String
     var bordered: Bool = true
+    var font: NSFont = .systemFont(ofSize: NSFont.systemFontSize)
+    var autoFocus: Bool = true
+    var focusTrigger: Int = 0
+    var onReturn: (() -> Void)? = nil
 
     func makeNSView(context: Context) -> NSTextField {
         let field = NSTextField(string: text)
@@ -658,14 +666,25 @@ struct IMETextField: NSViewRepresentable {
             field.drawsBackground = false
             field.focusRingType = .none
         }
-        field.font = .systemFont(ofSize: NSFont.systemFontSize)
-        DispatchQueue.main.async { field.window?.makeFirstResponder(field) }
+        field.font = font
+        context.coordinator.onReturn = onReturn
+        if autoFocus {
+            DispatchQueue.main.async { field.window?.makeFirstResponder(field) }
+        }
         return field
     }
 
     func updateNSView(_ field: NSTextField, context: Context) {
+        context.coordinator.onReturn = onReturn
+        if field.font != font {
+            field.font = font
+        }
         if field.stringValue != text {
             field.stringValue = text
+        }
+        if focusTrigger != context.coordinator.lastFocusTrigger {
+            context.coordinator.lastFocusTrigger = focusTrigger
+            DispatchQueue.main.async { field.window?.makeFirstResponder(field) }
         }
     }
 
@@ -682,11 +701,22 @@ struct IMETextField: NSViewRepresentable {
 
     final class Coordinator: NSObject, NSTextFieldDelegate {
         var text: Binding<String>
+        var onReturn: (() -> Void)?
+        var lastFocusTrigger = 0
+
         init(text: Binding<String>) { self.text = text }
 
         func controlTextDidChange(_ obj: Notification) {
             guard let field = obj.object as? NSTextField else { return }
             text.wrappedValue = field.stringValue
+        }
+
+        func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            guard commandSelector == #selector(NSResponder.insertNewline(_:)) else { return false }
+            // Let the IME consume Return while marked (pre-)text is active.
+            if textView.hasMarkedText() { return false }
+            onReturn?()
+            return onReturn != nil
         }
     }
 }
